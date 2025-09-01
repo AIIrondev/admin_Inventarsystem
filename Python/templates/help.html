@@ -1,0 +1,1077 @@
+<!--
+   Copyright 2025 Maximilian Gründinger
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
+{% extends "base.html" %}
+
+{% block title %}Help{% endblock %}
+
+{% block content %}
+<div class="help-page">
+   <style>
+      html { scroll-behavior: smooth; }
+      .help-page { color: #111; }
+      .help-page h1, .help-page h2, .help-page h3, .help-page h4 { scroll-margin-top: 80px; }
+      .help-toc {
+         background: #fff;
+         border: 1px solid #e5e7eb;
+         border-radius: 8px;
+         padding: 1rem 1.25rem;
+         margin: 1rem 0 1.5rem;
+         box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+      }
+      .help-toc .toc-title { font-weight: 700; margin-bottom: .5rem; }
+      .help-toc ol { margin: 0; padding-left: 1.2rem; }
+      .help-toc li { margin: .2rem 0; }
+      .help-toc a { text-decoration: none; color: #0d6efd; }
+      .help-toc a:hover { text-decoration: underline; }
+      .help-content pre {
+         background: #0f172a;
+         color: #e2e8f0;
+         border-radius: 8px;
+         padding: .75rem 1rem;
+         overflow: auto;
+         border: 1px solid #0b1220;
+      }
+      .help-content code:not([class]) {
+         background: #f1f5f9;
+         padding: .1rem .3rem;
+         border-radius: 4px;
+      }
+      .help-content ul, .help-content ol { margin-bottom: .75rem; }
+      .help-content p { margin: .5rem 0 .75rem; }
+      .badge-inline { vertical-align: middle; }
+   </style>
+
+   <nav class="help-toc" role="navigation" aria-label="Inhalt">
+      <div class="toc-title">Inhalt</div>
+      <ol>
+         <li><a href="#inventarsystem">Einleitung</a></li>
+         <li><a href="#system-bersicht-und-wartung">Systemübersicht und Wartung</a></li>
+         <li><a href="#funktionen">Funktionen</a></li>
+         <li><a href="#installation">Installation</a></li>
+         <li><a href="#schritt-f-r-schritt-anleitungen">Schritt-für-Schritt-Anleitungen</a>
+            <ol>
+               <li><a href="#installation-und-einrichtung">Installation und Einrichtung</a></li>
+               <li><a href="#system-starten-und-stoppen">System starten und stoppen</a></li>
+               <li><a href="#benutzerverwaltung">Benutzerverwaltung</a></li>
+               <li><a href="#artikelverwaltung">Artikelverwaltung</a></li>
+               <li><a href="#ausleihverwaltung">Ausleihverwaltung</a></li>
+               <li><a href="#berichterstellung-und-protokollierung">Berichterstellung und Protokollierung</a></li>
+               <li><a href="#datensicherung-und-wiederherstellung">Datensicherung und Wiederherstellung</a></li>
+               <li><a href="#wartung-und-updates">Wartung und Updates</a></li>
+            </ol>
+         </li>
+         <li><a href="#filter-und-kategorien-verwalten">Filter und Kategorien verwalten</a></li>
+         <li><a href="#benutzerdefinierte-anpassungen">Benutzerdefinierte Anpassungen</a></li>
+         <li><a href="#versionen-gezielt-steuern-mit-manage-version-sh-">Versionen steuern</a></li>
+         <li><a href="#systemanforderungen">Systemanforderungen</a></li>
+         <li><a href="#lizenz">Lizenz</a></li>
+         <li><a href="#mitwirkende">Mitwirkende</a></li>
+         <li><a href="#fehlerbehebung">Fehlerbehebung</a>
+            <ol>
+               <li><a href="#h-ufige-probleme-und-l-sungen">Häufige Probleme</a></li>
+               <li><a href="#pymongo-bson-konflikt-beheben">PyMongo/BSON Konflikt</a></li>
+               <li><a href="#berechtigungsprobleme-beheben">Berechtigungen</a></li>
+               <li><a href="#backup-und-wiederherstellung-testen">Backup/Wiederherstellung</a></li>
+               <li><a href="#-berpr-fung-der-mongodb-installation">MongoDB-Installation prüfen</a></li>
+               <li><a href="#probleme-mit-dem-backup-system">Backup-System</a></li>
+               <li><a href="#beispiel-beheben-von-bild-upload-und-qr-code-problemen">Bild/QR-Probleme</a></li>
+            </ol>
+         </li>
+         <li><a href="#schlussfolgerung">Schlussfolgerung</a>
+            <ol>
+               <li><a href="#empfohlener-workflow-bei-systemproblemen">Workflow bei Problemen</a></li>
+               <li><a href="#erweiterte-optionen-f-r-fix-all-sh">Fix-All Optionen</a></li>
+               <li><a href="#automatische-berwachung-einrichten">Automatische Überwachung</a></li>
+            </ol>
+         </li>
+      </ol>
+   </nav>
+
+   <div class="help-content">
+<h1 id="inventarsystem">Inventarsystem</h1>
+<p><a class="badge-inline" href="https://wakatime.com/badge/user/30b8509f-5e17-4d16-b6b8-3ca0f3f936d3/project/8a380b7f-389f-4a7e-8877-0fe9e1a4c243"><img src="https://wakatime.com/badge/user/30b8509f-5e17-4d16-b6b8-3ca0f3f936d3/project/8a380b7f-389f-4a7e-8877-0fe9e1a4c243.svg" alt="wakatime"></a></p>
+<p><strong>Aktuelle Version: 2.6.2</strong></p>
+<p>Ein webbasiertes Inventarverwaltungssystem, das es Benutzern ermöglicht, Gegenstände zu verfolgen, auszuleihen, zu reservieren und zurückzugeben. Das System verfügt über administrative Funktionen, Bildverwaltung, Buchungskalender und eine filterbasierte Artikelsuche.</p>
+<h2 id="system-bersicht-und-wartung">Systemübersicht und Wartung</h2>
+<p>Das Inventarsystem bietet folgende Wartungsskripte:</p>
+<ul>
+<li><code>update.sh</code> - Aktualisiert das System, erstellt ein Backup und installiert Abhängigkeiten</li>
+<li><code>fix-all.sh</code> - All-in-One Reparaturskript mit intelligenter Diagnose und automatischer Überwachung</li>
+<li><code>rebuild-venv.sh</code> - Baut die virtuelle Python-Umgebung neu auf</li>
+<li><code>start.sh</code>, <code>stop.sh</code>, <code>restart.sh</code> - Dienste steuern</li>
+<li><code>Backup-DB.py</code> - Manuelles Backup der Datenbank erstellen</li>
+<li><code>restore.sh</code> - Vorhandenes Backup wiederherstellen</li>
+<li><code>manage-version.sh</code> - <strong>Versionsverwaltung: gezielt auf bestimmte Versionen (Tags, Commits, Branches) wechseln, Downgrade/Upgrade, Versionen pinnen und Status anzeigen</strong></li>
+</ul>
+<h2 id="funktionen">Funktionen</h2>
+<h3 id="benutzeranmeldung">Benutzeranmeldung</h3>
+<ul>
+<li>Sichere Passwort-Richtlinien (mindestens 6 Zeichen!)</li>
+<li>Rollenbasierter Zugriff (Admin und reguläre Benutzer)</li>
+</ul>
+<h3 id="artikelverwaltung">Artikelverwaltung</h3>
+<ul>
+<li>Hinzufügen und Löschen von Artikeln</li>
+<li>Ausleihen und Zurückgeben</li>
+<li>Detaillierte Artikelansicht mit Metadaten</li>
+<li>Anschaffungsdaten (Jahr, Kosten)</li>
+<li>Mehrfachbild-Upload und Verwaltung</li>
+<li>Sicheres Bildspeichersystem mit UUID-basierten, einmaligen Dateinamen</li>
+</ul>
+<h3 id="buchungssystem">Buchungssystem</h3>
+<ul>
+<li>Konfliktprüfung bei Buchungen</li>
+<li>Automatische Aktivierung und Beendigung von Buchungen</li>
+</ul>
+<h3 id="bar-code-scanner">Bar-Code-Scanner</h3>
+<ul>
+<li>Eingebauter Scanner für Artikel Code</li>
+</ul>
+<h3 id="filterfunktionen">Filterfunktionen</h3>
+<ul>
+<li>Dreistufiges Filtersystem (Kategorie 1, 2 und 3)</li>
+<li>Kombinierte Filter für präzise Ergebnisse</li>
+</ul>
+<h3 id="administratorwerkzeuge">Administratorwerkzeuge</h3>
+<ul>
+<li>Benutzerverwaltung (Hinzufügen, Löschen)</li>
+<li>Protokollierung aller Ausleihen</li>
+<li>Zurücksetzen fehlerhafter Artikel</li>
+</ul>
+<h3 id="mobiloptimiertes-design">Mobiloptimiertes Design</h3>
+<ul>
+<li>Responsive Benutzeroberfläche</li>
+<li>Angepasste Bedienelemente für kleine Bildschirme</li>
+</ul>
+<h2 id="installation">Installation</h2>
+<h3 id="voraussetzungen">Voraussetzungen</h3>
+<ul>
+<li>Python 3.7+</li>
+<li>MongoDB</li>
+<li>pip</li>
+</ul>
+<h3 id="lokale-einrichtung">Lokale Einrichtung</h3>
+<p>Installation des Systems mit dem Installations-Skript (für Linux):</p>
+<pre><code class="lang-bash">wget -O - https:<span class="hljs-regexp">//</span>raw.githubusercontent.com<span class="hljs-regexp">/aiirondev/</span>Inventarsystem<span class="hljs-regexp">/main/i</span>nstall.sh | sudo bash
+</code></pre>
+<p>OR</p>
+<pre><code class="lang-bash">curl -s https:<span class="hljs-regexp">//</span>raw.githubusercontent.com<span class="hljs-regexp">/aiirondev/</span>Inventarsystem<span class="hljs-regexp">/main/i</span>nstall.sh | sudo bash
+</code></pre>
+<h3 id="starten-des-servers-nach-der-erst-instalation">Starten des Servers nach der erst Instalation</h3>
+<p>Als erstes müssen sie in die Website Direktion navigieren.
+Anschließend führen sie den folgenden Comand aus:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-literal">start</span>.sh
+</code></pre>
+<p><strong> Dies ist nur notwendig falls der Server nicht automatisch Hochfährt nach einem Neustart. </strong></p>
+<h2 id="schritt-f-r-schritt-anleitungen">Schritt-für-Schritt-Anleitungen</h2>
+<h3 id="installation-und-einrichtung">Installation und Einrichtung</h3>
+<h4 id="erstinstallation-des-systems">Erstinstallation des Systems</h4>
+<ol>
+<li><p>Laden Sie das Installationsskript herunter und führen Sie es aus:</p>
+<pre><code class="lang-bash">wget -O - https:<span class="hljs-regexp">//</span>raw.githubusercontent.com<span class="hljs-regexp">/aiirondev/</span>Inventarsystem<span class="hljs-regexp">/main/i</span>nstall.sh | sudo bash
+</code></pre>
+<p>ODER</p>
+<pre><code class="lang-bash">curl -s https:<span class="hljs-regexp">//</span>raw.githubusercontent.com<span class="hljs-regexp">/aiirondev/</span>Inventarsystem<span class="hljs-regexp">/main/i</span>nstall.sh | sudo bash
+</code></pre>
+</li>
+<li><p>Folgen Sie den Anweisungen im Installationsskript:</p>
+<ul>
+<li>Bestätigen Sie die Installation von abhängigen Paketen</li>
+<li>Warten Sie, bis MongoDB und andere Komponenten installiert sind</li>
+<li>Beachten Sie das Installationsprotokoll auf Fehler</li>
+</ul>
+</li>
+<li><p>Nach der Installation:</p>
+<pre><code class="lang-bash"><span class="hljs-keyword">cd</span> /<span class="hljs-keyword">opt</span>/Inventarsystem
+sudo ./start.<span class="hljs-keyword">sh</span>
+</code></pre>
+</li>
+<li><p>Überprüfen Sie die Installation:</p>
+<ul>
+<li>Öffnen Sie einen Webbrowser</li>
+<li>Navigieren Sie zu <code>https://[Server-IP-Adresse]</code></li>
+<li>Sie sollten die Login-Seite sehen</li>
+</ul>
+</li>
+<li><p>Bei Installations- oder Berechtigungsproblemen:</p>
+<ul>
+<li>Führen Sie <code>sudo ./fix-all.sh</code> aus, um alle Probleme umfassend zu beheben</li>
+<li>Zur reinen Diagnose ohne Änderungen: <code>sudo ./fix-all.sh --check-only</code></li>
+<li>Für gezielte Reparaturen nutzen Sie die Optionen <code>--fix-permissions</code>, <code>--fix-venv</code> oder <code>--fix-pymongo</code></li>
+<li>Bei anhaltenden Problemen führen Sie <code>sudo ./rebuild-venv.sh</code> aus, um die Python-Umgebung komplett neu zu erstellen</li>
+</ul>
+</li>
+</ol>
+<h4 id="konfiguration-der-datenbank">Konfiguration der Datenbank</h4>
+<ol>
+<li>Die MongoDB-Datenbank wird automatisch erstellt und konfiguriert</li>
+<li><p>Bei Bedarf können Sie die Datenbankverbindung in <code>config.json</code> anpassen:</p>
+<pre><code class="lang-bash">sudo nano <span class="hljs-built_in">config</span>.json
+</code></pre>
+</li>
+<li><p>Standardwerte für die Datenbankverbindung:</p>
+<pre><code class="lang-json">{
+  <span class="hljs-attr">"dbg"</span>: <span class="hljs-literal">false</span>,
+  <span class="hljs-attr">"key"</span>: <span class="hljs-string">"IhrGeheimSchlüssel"</span>,
+  <span class="hljs-attr">"ver"</span>: <span class="hljs-string">"2.5.18"</span>,
+  <span class="hljs-attr">"host"</span>: <span class="hljs-string">"0.0.0.0"</span>,
+  <span class="hljs-attr">"port"</span>: <span class="hljs-number">443</span>
+}
+</code></pre>
+</li>
+</ol>
+<h3 id="system-starten-und-stoppen">System starten und stoppen</h3>
+<h4 id="system-starten">System starten</h4>
+<ol>
+<li><p>Navigieren Sie zum Installationsverzeichnis:</p>
+<pre><code class="lang-bash">cd <span class="hljs-regexp">/pfad/</span>zum<span class="hljs-regexp">/Inventarsystem</span>
+</code></pre>
+</li>
+<li><p>Führen Sie das Start-Skript aus:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-literal">start</span>.sh
+</code></pre>
+</li>
+<li><p>Überprüfen Sie den Status:</p>
+<pre><code class="lang-bash"><span class="hljs-selector-tag">sudo</span> <span class="hljs-selector-tag">systemctl</span> <span class="hljs-selector-tag">status</span> <span class="hljs-selector-tag">inventarsystem-gunicorn</span><span class="hljs-selector-class">.service</span>
+<span class="hljs-selector-tag">sudo</span> <span class="hljs-selector-tag">systemctl</span> <span class="hljs-selector-tag">status</span> <span class="hljs-selector-tag">inventarsystem-nginx</span><span class="hljs-selector-class">.service</span>
+</code></pre>
+</li>
+</ol>
+<h4 id="system-stoppen">System stoppen</h4>
+<ol>
+<li><p>Navigieren Sie zum Installationsverzeichnis:</p>
+<pre><code class="lang-bash">cd <span class="hljs-regexp">/pfad/</span>zum<span class="hljs-regexp">/Inventarsystem</span>
+</code></pre>
+</li>
+<li><p>Führen Sie das Stopp-Skript aus:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-keyword">stop</span>.<span class="hljs-keyword">sh</span>
+</code></pre>
+</li>
+</ol>
+<h4 id="system-neustarten">System neustarten</h4>
+<ol>
+<li>Bei Konfigurationsänderungen oder Updates:<pre><code class="lang-bash"><span class="hljs-keyword">cd</span> /pfad/zum/Inventarsystem
+sudo ./restart.<span class="hljs-keyword">sh</span>
+</code></pre>
+</li>
+</ol>
+<h3 id="benutzerverwaltung">Benutzerverwaltung</h3>
+<h4 id="erstellen-des-ersten-administratorkontos">Erstellen des ersten Administratorkontos</h4>
+<ol>
+<li><p>Führen Sie das User-Generation-Skript aus:</p>
+<pre><code class="lang-bash"><span class="hljs-keyword">cd</span> /pfad/zum/Inventarsystem
+<span class="hljs-keyword">source</span> .venv/bin/activate
+<span class="hljs-keyword">python</span> Web/generate_user.<span class="hljs-keyword">py</span>
+</code></pre>
+</li>
+<li><p>Geben Sie die erforderlichen Informationen ein:</p>
+<ul>
+<li>Benutzername</li>
+<li>Passwort (mindestens 6 Zeichen)</li>
+<li>Admin-Status (ja/nein)</li>
+</ul>
+</li>
+</ol>
+<h4 id="benutzer-hinzuf-gen-als-administrator-">Benutzer hinzufügen (als Administrator)</h4>
+<ol>
+<li>Loggen Sie sich mit Ihrem Administrator-Konto ein</li>
+<li>Navigieren Sie zu &quot;Benutzer verwalten&quot;</li>
+<li>Klicken Sie auf &quot;Neuen Benutzer hinzufügen&quot;</li>
+<li>Geben Sie folgende Daten ein:<ul>
+<li>Benutzername (eindeutig)</li>
+<li>Passwort (mindestens 6 Zeichen)</li>
+<li>Admin-Status (ja/nein)</li>
+</ul>
+</li>
+<li>Klicken Sie auf &quot;Speichern&quot;</li>
+</ol>
+<h4 id="benutzer-l-schen">Benutzer löschen</h4>
+<ol>
+<li>Loggen Sie sich als Administrator ein</li>
+<li>Navigieren Sie zu &quot;Benutzer verwalten&quot;</li>
+<li>Finden Sie den zu löschenden Benutzer</li>
+<li>Klicken Sie auf das Löschsymbol neben dem Benutzernamen</li>
+<li>Bestätigen Sie die Löschaktion</li>
+</ol>
+<h3 id="artikelverwaltung">Artikelverwaltung</h3>
+<h4 id="artikel-hinzuf-gen">Artikel hinzufügen</h4>
+<ol>
+<li>Loggen Sie sich als Administrator ein</li>
+<li>Klicken Sie auf &quot;Artikel hochladen&quot;</li>
+<li>Füllen Sie das Formular mit folgenden Informationen aus:<ul>
+<li>Name des Artikels</li>
+<li>Ort (Standort/Raum)</li>
+<li>Beschreibung (Details zum Artikel)</li>
+<li>Filter-Kategorien (Unterrichtsfach, Materialtyp, etc.)</li>
+<li>Anschaffungsjahr (optional)</li>
+<li>Anschaffungskosten (optional)</li>
+<li>Code (interne Artikelnummer, kann automatisch generiert werden)</li>
+</ul>
+</li>
+<li>Laden Sie ein oder mehrere Bilder des Artikels hoch:<ul>
+<li>Klicken Sie auf &quot;Dateien auswählen&quot;</li>
+<li>Wählen Sie Bilder vom Computer aus</li>
+<li>Unterstützte Formate: JPG, JPEG, PNG, GIF, MP4, MOV, etc.</li>
+</ul>
+</li>
+<li>Klicken Sie auf &quot;Artikel hochladen&quot;</li>
+</ol>
+<h4 id="artikel-bearbeiten">Artikel bearbeiten</h4>
+<ol>
+<li>Finden Sie den Artikel in der Übersicht</li>
+<li>Klicken Sie auf das Bearbeitungssymbol</li>
+<li>Aktualisieren Sie die gewünschten Informationen</li>
+<li>Fügen Sie neue Bilder hinzu oder entfernen Sie bestehende</li>
+<li>Klicken Sie auf &quot;Änderungen speichern&quot;</li>
+</ol>
+<h4 id="artikel-l-schen">Artikel löschen</h4>
+<ol>
+<li>Finden Sie den Artikel in der Übersicht</li>
+<li>Klicken Sie auf das Löschsymbol (Mülleimer)</li>
+<li>Bestätigen Sie die Löschaktion</li>
+<li>Der Artikel und alle zugehörigen Bilder und QR-Codes werden entfernt</li>
+</ol>
+<h3 id="ausleihverwaltung">Ausleihverwaltung</h3>
+<h4 id="artikel-ausleihen-als-benutzer-">Artikel ausleihen (als Benutzer)</h4>
+<ol>
+<li>Finden Sie den gewünschten Artikel in der Übersicht</li>
+<li>Klicken Sie auf &quot;Ausleihen&quot;</li>
+<li>Das System protokolliert automatisch:<ul>
+<li>Ausleihzeitpunkt</li>
+<li>Ausleihenden Benutzer</li>
+<li>Status des Artikels wird auf &quot;Ausgeliehen&quot; gesetzt</li>
+</ul>
+</li>
+</ol>
+<h4 id="artikel-zur-ckgeben">Artikel zurückgeben</h4>
+<ol>
+<li>Navigieren Sie zu &quot;Meine ausgeliehenen Artikel&quot;</li>
+<li>Finden Sie den zurückzugebenden Artikel</li>
+<li>Klicken Sie auf &quot;Zurückgeben&quot;</li>
+<li>Das System aktualisiert automatisch:<ul>
+<li>Rückgabezeitpunkt</li>
+<li>Status des Artikels wird auf &quot;Verfügbar&quot; gesetzt</li>
+<li>Die Ausleihhistorie wird aktualisiert</li>
+</ul>
+</li>
+</ol>
+<h4 id="ausleihungen-planen">Ausleihungen planen</h4>
+<ol>
+<li>Navigieren Sie zum &quot;Terminplan&quot;</li>
+<li>Klicken Sie auf das &quot;+&quot;-Symbol oder &quot;Neue Buchung&quot;</li>
+<li>Wählen Sie folgende Informationen aus:<ul>
+<li>Artikel (aus Dropdown-Liste)</li>
+<li>Startdatum und -zeit</li>
+<li>Enddatum und -zeit</li>
+<li>Schulstunden/Perioden (optional)</li>
+<li>Notizen (Grund der Ausleihe, etc.)</li>
+</ul>
+</li>
+<li>Klicken Sie auf &quot;Buchung erstellen&quot;</li>
+<li>Der Termin erscheint farblich markiert im Kalender</li>
+</ol>
+<h3 id="berichterstellung-und-protokollierung">Berichterstellung und Protokollierung</h3>
+<h4 id="ausleihhistorie-anzeigen">Ausleihhistorie anzeigen</h4>
+<ol>
+<li>Loggen Sie sich als Administrator ein</li>
+<li>Navigieren Sie zu &quot;Protokolle&quot;</li>
+<li>Filtern Sie nach Bedarf:<ul>
+<li>Nach Zeitraum</li>
+<li>Nach Benutzer</li>
+<li>Nach Artikel</li>
+</ul>
+</li>
+<li>Die Liste zeigt:<ul>
+<li>Ausgeliehene Artikel</li>
+<li>Ausleihdatum und -zeit</li>
+<li>Rückgabedatum und -zeit</li>
+<li>Benutzer</li>
+</ul>
+</li>
+</ol>
+<h3 id="datensicherung-und-wiederherstellung">Datensicherung und Wiederherstellung</h3>
+<h4 id="manuelles-backup-erstellen">Manuelles Backup erstellen</h4>
+<ol>
+<li><p>Führen Sie das Backup-Skript aus:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-keyword">update</span>.<span class="hljs-keyword">sh</span>
+</code></pre>
+</li>
+<li><p>Das Backup wird erstellt unter:</p>
+<pre><code>/var/backups/Inventarsystem-YYYY-MM-DD<span class="hljs-selector-class">.tar</span><span class="hljs-selector-class">.gz</span>
+</code></pre></li>
+</ol>
+<h4 id="backup-wiederherstellen">Backup wiederherstellen</h4>
+<ol>
+<li><p>Zeigen Sie verfügbare Backups an:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-keyword">restore</span>.<span class="hljs-keyword">sh</span> --<span class="hljs-keyword">list</span>
+</code></pre>
+</li>
+<li><p>Wählen Sie ein Backup zum Wiederherstellen:</p>
+<pre><code class="lang-bash">sudo ./restore.sh --date=<span class="hljs-number">2025</span><span class="hljs-number">-07</span><span class="hljs-number">-15</span>
+</code></pre>
+<p>ODER für das neueste Backup:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-built_in">restore</span>.sh --<span class="hljs-built_in">date</span>=latest
+</code></pre>
+</li>
+<li><p>Starten Sie das System neu:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-built_in">restart</span>.sh
+</code></pre>
+</li>
+</ol>
+<h3 id="wartung-und-updates">Wartung und Updates</h3>
+<h4 id="system-aktualisieren">System aktualisieren</h4>
+<ol>
+<li><p>Navigieren Sie zum Installationsverzeichnis:</p>
+<pre><code class="lang-bash">cd <span class="hljs-regexp">/pfad/</span>zum<span class="hljs-regexp">/Inventarsystem</span>
+</code></pre>
+</li>
+<li><p>Führen Sie das Update-Skript aus:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-keyword">update</span>.<span class="hljs-keyword">sh</span>
+</code></pre>
+</li>
+<li><p>Das Skript unterstützt verschiedene Parameter:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-keyword">update</span>.<span class="hljs-keyword">sh</span> --restart-server        # Mit automatischem Neustart der Dienste
+sudo ./<span class="hljs-keyword">update</span>.<span class="hljs-keyword">sh</span> --compression-level=5   # Mit angepasstem Kompressionslevel (0-9)
+sudo ./<span class="hljs-keyword">update</span>.<span class="hljs-keyword">sh</span> --<span class="hljs-keyword">help</span>                  # Hilfe und weitere Optionen anzeigen
+</code></pre>
+</li>
+<li><p>Das Skript führt folgende Aktionen aus:</p>
+<ul>
+<li>Erstellt ein Backup des aktuellen Systems</li>
+<li>Holt die neuesten Änderungen vom Git-Repository</li>
+<li>Installiert erforderliche Abhängigkeiten</li>
+<li>Behebt mögliche Konflikte zwischen pymongo und bson</li>
+<li>Korrigiert Berechtigungen für kritische Verzeichnisse</li>
+<li>Startet die Dienste neu (falls --restart-server angegeben wurde)</li>
+</ul>
+</li>
+</ol>
+<h4 id="virtuelle-umgebung-neu-aufbauen">Virtuelle Umgebung neu aufbauen</h4>
+<p>Falls Probleme mit Python-Abhängigkeiten auftreten:</p>
+<ol>
+<li><p>Führen Sie das Rebuild-Skript aus:</p>
+<pre><code class="lang-bash"><span class="hljs-attribute">sudo</span> ./rebuild-venv.sh
+</code></pre>
+</li>
+<li><p>Das Skript führt automatisch folgende Schritte aus:</p>
+<ul>
+<li>Sichert die alte virtuelle Umgebung in <code>.venv_backup_[Zeitstempel]</code></li>
+<li>Erstellt eine neue virtuelle Umgebung</li>
+<li>Installiert alle erforderlichen Pakete aus requirements.txt</li>
+<li>Löst potenzielle Konflikte zwischen pymongo und bson</li>
+<li>Setzt korrekte Berechtigungen für alle Dateien</li>
+<li>Verifiziert die neue Umgebung mit einem Testlauf</li>
+<li>Löscht die Backup-Umgebung nach erfolgreicher Überprüfung</li>
+</ul>
+</li>
+<li><p>Nach Abschluss starten Sie das System neu:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-built_in">restart</span>.sh
+</code></pre>
+</li>
+</ol>
+<h4 id="berechtigungen-korrigieren">Berechtigungen korrigieren</h4>
+<p>Bei Zugriffsfehlern:</p>
+<ol>
+<li><p>Führen Sie das umfassende Reparatur-Skript aus:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-keyword">fix</span>-<span class="hljs-keyword">all</span>.<span class="hljs-keyword">sh</span>
+</code></pre>
+<p>Dieses Skript behebt alle bekannten Berechtigungsprobleme im gesamten System, einschließlich:</p>
+<ul>
+<li>Logs-Verzeichnisse und Dateien</li>
+<li>Skript- und Programmdateien</li>
+<li>Git Repository-Berechtigungen</li>
+<li>Web-Upload-Verzeichnisse</li>
+<li>QR-Code-Verzeichnisse</li>
+<li>Thumbnails und Vorschaubilder</li>
+<li>Python virtuelle Umgebung</li>
+<li>MongoDB-Zugriffsrechte</li>
+<li>PyMongo/BSON-Konflikte</li>
+</ul>
+</li>
+<li><p>Stellen Sie sicher, dass das Logs-Verzeichnis korrekte Berechtigungen hat:</p>
+<pre><code class="lang-bash">sudo chmod <span class="hljs-number">777</span> logs
+</code></pre>
+</li>
+</ol>
+<h4 id="log-dateien-berpr-fen">Log-Dateien überprüfen</h4>
+<ol>
+<li><p>System-Logs anzeigen:</p>
+<pre><code class="lang-bash">sudo journalctl -u inventarsystem-gunicorn<span class="hljs-selector-class">.service</span> -f
+sudo journalctl -u inventarsystem-nginx<span class="hljs-selector-class">.service</span> -f
+</code></pre>
+</li>
+<li><p>Anwendungs-Logs anzeigen:</p>
+<pre><code class="lang-bash">tail -n <span class="hljs-number">50</span> logs/<span class="hljs-keyword">error</span>.<span class="hljs-built_in">log</span>
+tail -n <span class="hljs-number">50</span> logs/access.<span class="hljs-built_in">log</span>
+</code></pre>
+</li>
+</ol>
+<h3 id="filter-und-kategorien-verwalten">Filter und Kategorien verwalten</h3>
+<h4 id="filter-kategorien-hinzuf-gen">Filter-Kategorien hinzufügen</h4>
+<ol>
+<li>Loggen Sie sich als Administrator ein</li>
+<li>Navigieren Sie zu &quot;Filter verwalten&quot;</li>
+<li>Wählen Sie die Filter-Kategorie aus (1, 2 oder 3)</li>
+<li>Geben Sie neue Filterwerte ein</li>
+<li>Klicken Sie auf &quot;Speichern&quot;</li>
+</ol>
+<h4 id="standorte-verwalten">Standorte verwalten</h4>
+<ol>
+<li>Loggen Sie sich als Administrator ein</li>
+<li>Navigieren Sie zu &quot;Standorte verwalten&quot;</li>
+<li>Geben Sie neue Standorte ein oder bearbeiten/löschen Sie bestehende</li>
+<li>Klicken Sie auf &quot;Speichern&quot;</li>
+</ol>
+<h3 id="benutzerdefinierte-anpassungen">Benutzerdefinierte Anpassungen</h3>
+<h4 id="systemeinstellungen-ndern">Systemeinstellungen ändern</h4>
+<ol>
+<li><p>Öffnen Sie die Konfigurationsdatei:</p>
+<pre><code class="lang-bash">sudo nano <span class="hljs-built_in">config</span>.json
+</code></pre>
+</li>
+<li><p>Passen Sie folgende Einstellungen nach Bedarf an:</p>
+<ul>
+<li><code>dbg</code>: Debug-Modus (true/false)</li>
+<li><code>key</code>: Geheimer Schlüssel für Session-Sicherheit</li>
+<li><code>ver</code>: Versionsnummer</li>
+<li><code>host</code>: Host-Adresse (0.0.0.0 für alle Schnittstellen)</li>
+<li><code>port</code>: Port-Nummer (Standard: 443 für HTTPS)</li>
+<li><code>schoolPeriods</code>: Definition der Schulstunden</li>
+</ul>
+</li>
+<li><p>Speichern Sie die Datei und starten Sie das System neu:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-built_in">restart</span>.sh
+</code></pre>
+</li>
+</ol>
+<h4 id="ssl-zertifikate-aktualisieren">SSL-Zertifikate aktualisieren</h4>
+<ol>
+<li><p>Platzieren Sie Ihre neuen Zertifikatsdateien in den Ordner <code>certs/</code>:</p>
+<ul>
+<li><code>inventarsystem.crt</code> (Zertifikat)</li>
+<li><code>inventarsystem.key</code> (Privater Schlüssel)</li>
+</ul>
+</li>
+<li><p>Stellen Sie sicher, dass die Dateien die korrekten Berechtigungen haben:</p>
+<pre><code class="lang-bash">sudo chmod <span class="hljs-number">600</span> certs/inventarsystem.<span class="hljs-type">key</span>
+sudo chmod <span class="hljs-number">644</span> certs/inventarsystem.crt
+</code></pre>
+</li>
+<li><p>Aktualisieren Sie die Nginx-Konfiguration (falls erforderlich):</p>
+<pre><code class="lang-bash">sudo nano <span class="hljs-regexp">/etc/</span>nginx<span class="hljs-regexp">/sites-available/i</span>nventarsystem
+</code></pre>
+</li>
+<li><p>Starten Sie das System neu:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-built_in">restart</span>.sh
+</code></pre>
+</li>
+<li><p>Überprüfen Sie die SSL-Konfiguration:</p>
+<pre><code class="lang-bash">openssl s_client -<span class="hljs-built_in">connect</span> localhost:<span class="hljs-number">443</span> -servername localhost
+</code></pre>
+</li>
+</ol>
+<h4 id="systemsicherung-und-disaster-recovery">Systemsicherung und Disaster Recovery</h4>
+<ol>
+<li><p><strong>Vollständige Systemsicherung erstellen</strong>:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-keyword">update</span>.<span class="hljs-keyword">sh</span> --full-backup
+</code></pre>
+</li>
+<li><p><strong>Notfall-Wiederherstellung nach Systemausfall</strong>:</p>
+<pre><code class="lang-bash"><span class="hljs-meta"># System neu installieren (falls erforderlich)</span>
+wget -O - https:<span class="hljs-comment">//raw.githubusercontent.com/aiirondev/Inventarsystem/main/install.sh | sudo bash</span>
+
+<span class="hljs-meta"># Zum Installationsverzeichnis wechseln</span>
+cd /pfad/zum/Inventarsystem
+
+<span class="hljs-meta"># Backup wiederherstellen</span>
+sudo ./restore.sh --date=latest --full
+
+<span class="hljs-meta"># System neu starten</span>
+sudo ./restart.sh
+</code></pre>
+</li>
+<li><p><strong>Regelmäßige Backups planen</strong>:</p>
+<pre><code class="lang-bash"># Crontab bearbeiten
+sudo crontab -<span class="hljs-built_in">e</span>
+
+# Tägliches Backup um 3:00 Uhr morgens hinzufü<span class="hljs-keyword">gen</span>
+0 3 * * * <span class="hljs-keyword">cd</span> /pfad/zum/Inventarsystem &amp;&amp; ./<span class="hljs-keyword">update</span>.<span class="hljs-keyword">sh</span> --backup-only &gt;&gt; logs/backup.<span class="hljs-keyword">log</span> 2&gt;&amp;1
+</code></pre>
+</li>
+</ol>
+<h3 id="versionen-gezielt-steuern-mit-manage-version-sh-">Versionen gezielt steuern mit <code>manage-version.sh</code></h3>
+<p>Mit dem Skript <code>manage-version.sh</code> können Sie die aktuell eingesetzte Version des Inventarsystems exakt kontrollieren, auf ältere Versionen zurückgehen (Downgrade), gezielt auf einen bestimmten Commit/Tag/Branch wechseln oder die Version dauerhaft pinnen. Dies gibt Ihnen maximale Kontrolle über Updates und Rollbacks.</p>
+<p><strong>Typische Anwendungsfälle:</strong></p>
+<ul>
+<li>Downgrade auf eine frühere Version bei Problemen mit einem Update</li>
+<li>Testen neuer Features auf einem separaten Branch/Tag</li>
+<li>Dauerhaftes Festhalten an einer stabilen Version (Version pinnen)</li>
+<li>Rückkehr zur aktuellen Hauptversion (main)</li>
+</ul>
+<p><strong>Verwendung:</strong></p>
+<pre><code class="lang-bash"># Dauerhaft auf eine bestimmte <span class="hljs-keyword">Version</span> (Tag, Commit oder Branch) wechseln und Dienste neu starten
+./manage-<span class="hljs-keyword">version</span>.<span class="hljs-keyword">sh</span> pin v2.5.17 --restart
+
+# Einmalig auf eine <span class="hljs-keyword">Version</span> wechseln (ohne zu pinnen)
+./manage-<span class="hljs-keyword">version</span>.<span class="hljs-keyword">sh</span> <span class="hljs-keyword">use</span> 1a2b3c4 --restart
+
+# Aktuelle <span class="hljs-keyword">Version</span> und Pin-Status anzeigen
+./manage-<span class="hljs-keyword">version</span>.<span class="hljs-keyword">sh</span> status
+
+# <span class="hljs-keyword">Version</span>-Pin entfernen und wieder auf die aktuelle Hauptversion (main) gehen
+./manage-<span class="hljs-keyword">version</span>.<span class="hljs-keyword">sh</span> <span class="hljs-keyword">clear</span> --restart
+
+# Verfügbare Tags oder Commits anzeigen
+./manage-<span class="hljs-keyword">version</span>.<span class="hljs-keyword">sh</span> <span class="hljs-keyword">list</span> --tags
+./manage-<span class="hljs-keyword">version</span>.<span class="hljs-keyword">sh</span> <span class="hljs-keyword">list</span> --commits
+
+# Aktuell gesetzten Pin erneut anwenden (z.B. nach lokalen Änderungen)
+./manage-<span class="hljs-keyword">version</span>.<span class="hljs-keyword">sh</span> apply --restart
+</code></pre>
+<p><strong>Hinweise:</strong></p>
+<ul>
+<li>Die aktuell gepinnte Version wird in der Datei <code>.version-lock</code> gespeichert.</li>
+<li>Sie können als <code>&lt;ref&gt;</code> einen Tag-Namen, Branch-Namen oder Commit-Hash angeben.</li>
+<li>Mit <code>--restart</code> werden nach dem Wechsel automatisch die Dienste neu gestartet.</li>
+<li>Mit <code>--force</code> werden lokale Änderungen verworfen (Achtung: nicht gespeichert!).</li>
+<li>Das Skript arbeitet unabhängig von <code>update.sh</code> und kann jederzeit verwendet werden.<ul>
+<li>Sicherheit: Beim Wechseln der Versionen erstellt das Skript automatisch ein vollständiges Backup unter <code>/var/backups</code> und bewahrt wichtige Datenverzeichnisse (z. B. <code>Images/</code>, <code>logs/</code>, <code>Web/uploads/</code>, <code>Web/thumbnails/</code>, <code>Web/QRCodes/</code>) über den Versionswechsel hinweg und stellt sie danach wieder her.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Beispiele:</strong></p>
+<pre><code class="lang-bash"><span class="hljs-comment"># Auf einen bestimmten Commit zurückgehen (Downgrade):</span>
+./manage-<span class="hljs-built_in">version</span>.sh pin <span class="hljs-number">1</span>a2b3c4 <span class="hljs-comment">--restart</span>
+
+<span class="hljs-comment"># Auf einen bestimmten Release-Tag wechseln:</span>
+./manage-<span class="hljs-built_in">version</span>.sh pin v2<span class="hljs-number">.5</span><span class="hljs-number">.16</span> <span class="hljs-comment">--restart</span>
+
+<span class="hljs-comment"># Nur für einen Testlauf auf einen Feature-Branch wechseln:</span>
+./manage-<span class="hljs-built_in">version</span>.sh use feature/neues-feature <span class="hljs-comment">--restart</span>
+
+<span class="hljs-comment"># Wieder auf die aktuelle Hauptversion (main) gehen:</span>
+./manage-<span class="hljs-built_in">version</span>.sh <span class="hljs-built_in">clear</span> <span class="hljs-comment">--restart</span>
+</code></pre>
+<p><strong>Tipp:</strong>
+Wenn Sie dauerhaft auf eine bestimmte Version festpinnen, werden Updates per <code>update.sh</code> nicht automatisch auf die neueste Version wechseln, solange der Pin aktiv ist. Entfernen Sie den Pin mit <code>./manage-version.sh clear</code>, um wieder Updates zu erhalten.</p>
+<h2 id="systemanforderungen">Systemanforderungen</h2>
+<ul>
+<li>Moderner Webbrowser (Chrome, Firefox, Safari, Edge)</li>
+<li>Internetzugang</li>
+<li>Für Administratoren: Desktop-Umgebung empfohlen</li>
+<li>Für QR-Scanning: Gerät mit Kamera</li>
+</ul>
+<h2 id="lizenz">Lizenz</h2>
+<p>Dieses Projekt ist unter der Apache License, Version 2.0 lizenziert. Siehe die LICENSE-Datei für Details.</p>
+<h2 id="mitwirkende">Mitwirkende</h2>
+<p><strong>Maximilian Gründinger</strong> - Projektgründer</p>
+<p>Für technische Unterstützung oder Fragen bitte ein Issue im GitHub-Repository eröffnen.</p>
+<h2 id="fehlerbehebung">Fehlerbehebung</h2>
+<h3 id="h-ufige-probleme-und-l-sungen">Häufige Probleme und Lösungen</h3>
+<h4 id="webserver-startet-nicht">Webserver startet nicht</h4>
+<p>Wenn der Webserver nach einem Neustart oder Update nicht startet:</p>
+<ol>
+<li><p><strong>Status der Dienste prüfen</strong>:</p>
+<pre><code class="lang-bash"><span class="hljs-selector-tag">sudo</span> <span class="hljs-selector-tag">systemctl</span> <span class="hljs-selector-tag">status</span> <span class="hljs-selector-tag">inventarsystem-gunicorn</span><span class="hljs-selector-class">.service</span>
+<span class="hljs-selector-tag">sudo</span> <span class="hljs-selector-tag">systemctl</span> <span class="hljs-selector-tag">status</span> <span class="hljs-selector-tag">inventarsystem-nginx</span><span class="hljs-selector-class">.service</span>
+</code></pre>
+</li>
+<li><p><strong>Log-Dateien auf Fehler prüfen</strong>:</p>
+<pre><code class="lang-bash">sudo tail -n <span class="hljs-number">50</span> /<span class="hljs-built_in">var</span>/<span class="hljs-built_in">log</span>/nginx/<span class="hljs-built_in">error</span>.<span class="hljs-built_in">log</span>
+sudo tail -n <span class="hljs-number">50</span> logs/<span class="hljs-built_in">error</span>.<span class="hljs-built_in">log</span>
+</code></pre>
+</li>
+<li><p><strong>Dienste neu starten</strong>:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-built_in">restart</span>.sh
+</code></pre>
+</li>
+<li><p><strong>Berechtigungen korrigieren</strong>:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-keyword">fix</span>-<span class="hljs-keyword">all</span>.<span class="hljs-keyword">sh</span> --<span class="hljs-keyword">fix</span>-permissions
+</code></pre>
+</li>
+</ol>
+<h4 id="datenbank-verbindungsprobleme">Datenbank-Verbindungsprobleme</h4>
+<p>Bei Fehlermeldungen bezüglich der MongoDB-Verbindung:</p>
+<ol>
+<li><p><strong>MongoDB-Status überprüfen</strong>:</p>
+<pre><code class="lang-bash"><span class="hljs-attribute">sudo systemctl status mongodb</span>
+</code></pre>
+</li>
+<li><p><strong>MongoDB neu starten</strong>:</p>
+<pre><code class="lang-bash"><span class="hljs-attribute">sudo systemctl restart mongodb</span>
+</code></pre>
+</li>
+<li><p><strong>Konfiguration überprüfen</strong>:</p>
+<pre><code class="lang-bash">sudo nano <span class="hljs-built_in">config</span>.json
+</code></pre>
+</li>
+</ol>
+<h4 id="fehler-bei-bildoperationen">Fehler bei Bildoperationen</h4>
+<p>Bei Problemen beim Bild-Upload oder QR-Code-Generierung:</p>
+<ol>
+<li><p><strong>Berechtigungen der Upload-Verzeichnisse überprüfen</strong>:</p>
+<pre><code class="lang-bash">sudo <span class="hljs-keyword">ls</span> -<span class="hljs-keyword">la</span> Web/uploads
+sudo <span class="hljs-keyword">ls</span> -<span class="hljs-keyword">la</span> Web/QRCodes
+sudo <span class="hljs-keyword">ls</span> -<span class="hljs-keyword">la</span> Web/thumbnails
+sudo <span class="hljs-keyword">ls</span> -<span class="hljs-keyword">la</span> Web/previews
+</code></pre>
+</li>
+<li><p><strong>Fehlende Verzeichnisse anlegen und Berechtigungen korrigieren</strong>:</p>
+<pre><code class="lang-bash"><span class="hljs-comment"># Verzeichnisse erstellen falls nicht vorhanden</span>
+sudo mkdir -p Web<span class="hljs-regexp">/uploads Web/</span>QRCodes Web<span class="hljs-regexp">/thumbnails Web/</span>previews
+
+<span class="hljs-comment"># Berechtigungen korrigieren</span>
+sudo chmod -R <span class="hljs-number">755</span> Web<span class="hljs-regexp">/uploads Web/</span>QRCodes Web<span class="hljs-regexp">/thumbnails Web/</span>previews
+sudo chown -R $(whoami):$(whoami) Web<span class="hljs-regexp">/uploads Web/</span>QRCodes Web<span class="hljs-regexp">/thumbnails Web/</span>previews
+</code></pre>
+</li>
+<li><p><strong>Log-Dateien auf spezifische Fehler prüfen</strong>:</p>
+<pre><code class="lang-bash"><span class="hljs-comment"># Fehler bei Bildverarbeitung suchen</span>
+sudo tail -n <span class="hljs-number">100</span> logs/<span class="hljs-keyword">error</span>.<span class="hljs-built_in">log</span> | grep <span class="hljs-string">"image"</span>
+sudo tail -n <span class="hljs-number">100</span> logs/<span class="hljs-keyword">error</span>.<span class="hljs-built_in">log</span> | grep <span class="hljs-string">"upload"</span>
+
+<span class="hljs-comment"># Fehler bei der Optimierung und Thumbnail-Erstellung suchen</span>
+sudo tail -n <span class="hljs-number">100</span> logs/<span class="hljs-keyword">error</span>.<span class="hljs-built_in">log</span> | grep <span class="hljs-string">"Optimize"</span>
+sudo tail -n <span class="hljs-number">100</span> logs/<span class="hljs-keyword">error</span>.<span class="hljs-built_in">log</span> | grep <span class="hljs-string">"thumbnail"</span>
+</code></pre>
+</li>
+<li><p><strong>Bei Problemen mit teilweisen Uploads (nur manche Bilder werden hochgeladen)</strong>:</p>
+<pre><code class="lang-bash"><span class="hljs-meta"># Alle Upload-Session-IDs der letzten Uploads anzeigen</span>
+sudo grep <span class="hljs-string">"Upload session"</span> logs/access.log | tail -n <span class="hljs-number">20</span>
+
+<span class="hljs-meta"># Detaillierte Informationen zu einer bestimmten Session abrufen (SESSION_ID ersetzen)</span>
+sudo grep <span class="hljs-string">"Upload SESSION_ID"</span> logs/access.log
+
+<span class="hljs-meta"># Auf Dateisystem-Probleme prüfen</span>
+df -h
+</code></pre>
+</li>
+<li><p><strong>Fix-All-Script ausführen</strong> (behebt die häufigsten Probleme automatisch):</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-keyword">fix</span>-<span class="hljs-keyword">all</span>.<span class="hljs-keyword">sh</span>
+</code></pre>
+</li>
+<li><p><strong>Python Pillow-Bibliothek neu installieren</strong> (bei Problemen mit Bildkonvertierung):</p>
+<pre><code class="lang-bash">source .venv/bin/activate
+pip <span class="hljs-keyword">uninstall</span> -y Pillow
+pip <span class="hljs-keyword">install</span> <span class="hljs-comment">--force-reinstall Pillow</span>
+</code></pre>
+</li>
+</ol>
+<h4 id="anmelde-authentifizierungsprobleme">Anmelde-/Authentifizierungsprobleme</h4>
+<p>Bei Problemen mit der Benutzeranmeldung:</p>
+<ol>
+<li><p><strong>Session-Cookies löschen</strong> im Browser des Benutzers</p>
+</li>
+<li><p><strong>Admin-Benutzer zurücksetzen</strong>:</p>
+<pre><code class="lang-bash"><span class="hljs-keyword">source</span> .venv/bin/activate
+<span class="hljs-keyword">python</span> Web/generate_user.<span class="hljs-keyword">py</span>
+</code></pre>
+</li>
+<li><p><strong>MongoDB-Benutzerdaten überprüfen</strong>:</p>
+<pre><code class="lang-bash">source .venv/bin/activate
+python -c "from pymongo import MongoClient; print(list(MongoClient().Inventarsystem.users.find({}, {<span class="hljs-string">'Username'</span>: 1, <span class="hljs-string">'Admin'</span>: 1, <span class="hljs-string">'_id'</span>: 0})))"
+</code></pre>
+</li>
+</ol>
+<h3 id="fehlerbehebung">Fehlerbehebung</h3>
+<h4 id="pymongo-bson-konflikt-beheben">PyMongo/Bson Konflikt beheben</h4>
+<p>Es kann zu einem Konflikt zwischen den Paketen <code>pymongo</code> und <code>bson</code> kommen, der sich durch folgende Fehlermeldung äußert:</p>
+<pre><code>ImportError: cannot <span class="hljs-keyword">import</span> name <span class="hljs-string">'_get_object_size'</span> <span class="hljs-keyword">from</span> <span class="hljs-string">'bson'</span>
+</code></pre><p>Dieser Konflikt tritt auf, wenn das separate <code>bson</code>-Paket zusammen mit <code>pymongo</code> installiert ist, wobei <code>pymongo</code> bereits seine eigene Version von <code>bson</code> enthält.</p>
+<h5 id="schritte-zur-fehlerbehebung-">Schritte zur Fehlerbehebung:</h5>
+<ol>
+<li><p><strong>All-in-One Reparatur-Skript ausführen</strong>:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-keyword">fix</span>-<span class="hljs-keyword">all</span>.<span class="hljs-keyword">sh</span>
+</code></pre>
+<p>Dieses Skript erkennt und behebt automatisch den PyMongo/BSON-Konflikt.</p>
+</li>
+<li><p><strong>Falls der erste Schritt nicht hilft, die virtuelle Umgebung neu erstellen</strong>:</p>
+<pre><code class="lang-bash"><span class="hljs-attribute">sudo</span> ./rebuild-venv.sh
+</code></pre>
+<p>Dieses Skript erstellt die virtuelle Python-Umgebung komplett neu und installiert alle erforderlichen Pakete.</p>
+</li>
+<li><p><strong>Services neu starten</strong>:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-built_in">restart</span>.sh
+</code></pre>
+</li>
+</ol>
+<h4 id="berechtigungsprobleme-beheben">Berechtigungsprobleme beheben</h4>
+<p>Wenn Sie Berechtigungsfehler wie <code>Keine Berechtigung</code> oder <code>Permission denied</code> sehen:</p>
+<ol>
+<li><p><strong>All-in-One Reparatur durchführen</strong> (empfohlen):</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-keyword">fix</span>-<span class="hljs-keyword">all</span>.<span class="hljs-keyword">sh</span>
+</code></pre>
+<p>Dieses umfassende Skript behebt alle bekannten Probleme in einem einzigen Durchlauf:</p>
+<ul>
+<li>Berechtigungen und Eigentümerrechte für das gesamte Projekt</li>
+<li>Virtual Environment und Python-Pakete</li>
+<li>Konfliktlösung zwischen pymongo und bson</li>
+<li>Log-Verzeichnisse und Dateien</li>
+<li>Web-Verzeichnisberechtigungen</li>
+<li>Git Repository-Berechtigungen</li>
+<li>Systemdienste-Prüfung</li>
+</ul>
+<p>Das Skript gibt detaillierte Informationen zu jedem Schritt aus und protokolliert alles in <code>logs/fix_all.log</code>.</p>
+</li>
+<li><p><strong>Gezielte Reparatur bestimmter Probleme</strong>:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-keyword">fix</span>-<span class="hljs-keyword">all</span>.<span class="hljs-keyword">sh</span> --<span class="hljs-keyword">fix</span>-permissions  # Nur Berechtigungsprobleme beheben
+sudo ./<span class="hljs-keyword">fix</span>-<span class="hljs-keyword">all</span>.<span class="hljs-keyword">sh</span> --<span class="hljs-keyword">fix</span>-venv         # Nur virtuelle Umgebung reparieren
+sudo ./<span class="hljs-keyword">fix</span>-<span class="hljs-keyword">all</span>.<span class="hljs-keyword">sh</span> --<span class="hljs-keyword">fix</span>-pymongo      # Nur pymongo/bson-Konflikte beheben
+</code></pre>
+<p>Diese Optionen ermöglichen die gezielte Behebung spezifischer Probleme ohne die Ausführung des gesamten Reparaturprozesses.</p>
+</li>
+<li><p><strong>Logs-Verzeichnis manuell korrigieren</strong>:</p>
+<pre><code class="lang-bash">sudo <span class="hljs-keyword">mkdir</span> -p logs
+sudo <span class="hljs-keyword">chmod</span> <span class="hljs-number">777</span> logs
+</code></pre>
+</li>
+<li><p><strong>Falls Python-Skripte nicht ausgeführt werden können</strong>:</p>
+<pre><code class="lang-bash"><span class="hljs-attribute">sudo</span> chmod +x <span class="hljs-regexp">*.py</span>
+sudo chmod +x <span class="hljs-regexp">*.sh</span>
+</code></pre>
+</li>
+<li><p><strong>Git Repository-Probleme beheben</strong>:</p>
+<pre><code class="lang-bash">git config --global --<span class="hljs-keyword">add</span><span class="bash"> safe.directory <span class="hljs-string">"<span class="hljs-variable">$(pwd)</span>"</span></span>
+</code></pre>
+</li>
+</ol>
+<h4 id="backup-und-wiederherstellung-testen">Backup und Wiederherstellung testen</h4>
+<p>So stellen Sie sicher, dass das Backup- und Wiederherstellungssystem korrekt funktioniert:</p>
+<ol>
+<li><p><strong>Manuelles Backup erstellen</strong>:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-keyword">update</span>.<span class="hljs-keyword">sh</span>
+</code></pre>
+</li>
+<li><p><strong>Backup-Liste anzeigen</strong>:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-keyword">restore</span>.<span class="hljs-keyword">sh</span> --<span class="hljs-keyword">list</span>
+</code></pre>
+</li>
+<li><p><strong>Neuestes Backup wiederherstellen</strong> (nur zu Testzwecken):</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-built_in">restore</span>.sh --<span class="hljs-built_in">date</span>=latest
+</code></pre>
+</li>
+<li><p><strong>Nach erfolgreicher Wiederherstellung prüfen</strong>:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-built_in">restart</span>.sh
+</code></pre>
+<p>Überprüfen Sie anschließend, ob alle Funktionen wie erwartet arbeiten.</p>
+</li>
+</ol>
+<h4 id="-berpr-fung-der-mongodb-installation">Überprüfung der MongoDB-Installation</h4>
+<ol>
+<li><p><strong>MongoDB-Status überprüfen</strong>:</p>
+<pre><code class="lang-bash"><span class="hljs-attribute">sudo systemctl status mongodb</span>
+</code></pre>
+</li>
+<li><p><strong>MongoDB-Verbindung testen</strong>:</p>
+<pre><code class="lang-bash">source .venv/bin/activate
+python -c <span class="hljs-string">"from pymongo import MongoClient; print('</span>MongoDB connection successful' <span class="hljs-keyword">if</span> MongoClient().server_info() <span class="hljs-keyword">else</span> <span class="hljs-string">'Failed'</span>)<span class="hljs-string">"</span>
+</code></pre>
+</li>
+<li><p><strong>MongoDB-Version überprüfen</strong>:</p>
+<pre><code class="lang-bash">mongod <span class="hljs-comment">--version</span>
+</code></pre>
+</li>
+<li><p><strong>MongoDB-Protokolle überprüfen</strong>:</p>
+<pre><code class="lang-bash"><span class="hljs-attribute">sudo journalctl -u mongodb</span>
+</code></pre>
+</li>
+<li><p><strong>MongoDB-Reparatur bei Beschädigung</strong>:</p>
+<pre><code class="lang-bash">sudo systemctl stop mongodb
+sudo mongod --repair --dbpath /var/<span class="hljs-class"><span class="hljs-keyword">lib</span>/<span class="hljs-title">mongodb</span></span>
+sudo systemctl start mongodb
+</code></pre>
+</li>
+</ol>
+<h4 id="probleme-mit-dem-backup-system">Probleme mit dem Backup-System</h4>
+<ol>
+<li><p><strong>Backup-Verzeichnis überprüfen</strong>:</p>
+<pre><code class="lang-bash"><span class="hljs-keyword">ls</span> -<span class="hljs-keyword">la</span> /<span class="hljs-keyword">var</span>/backups/
+</code></pre>
+</li>
+<li><p><strong>Speicherplatz überprüfen</strong>:</p>
+<pre><code class="lang-bash"><span class="hljs-attribute">df -h</span>
+</code></pre>
+</li>
+<li><p><strong>Backup manuell erzwingen</strong>:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-keyword">update</span>.<span class="hljs-keyword">sh</span> --force-backup
+</code></pre>
+</li>
+<li><p><strong>Backup entpacken und inspizieren</strong>:</p>
+<pre><code class="lang-bash">mkdir -<span class="hljs-selector-tag">p</span> ~/temp_backup
+sudo tar -xzf /var/backups/Inventarsystem-YYYY-MM-DD<span class="hljs-selector-class">.tar</span><span class="hljs-selector-class">.gz</span> -C ~/temp_backup
+ls -la ~/temp_backup
+</code></pre>
+</li>
+</ol>
+<h4 id="beispiel-beheben-von-bild-upload-und-qr-code-problemen">Beispiel: Beheben von Bild-Upload und QR-Code Problemen</h4>
+<p>Wenn Probleme bei Bild-Uploads oder der QR-Code Generierung auftreten, folgen Sie dieser schrittweisen Fehlerbehebung:</p>
+<ol>
+<li><p><strong>Überprüfen Sie die Verzeichnisstruktur und Berechtigungen</strong>:</p>
+<pre><code class="lang-bash">sudo ls -la Web<span class="hljs-regexp">/uploads Web/</span>QRCodes Web<span class="hljs-regexp">/thumbnails Web/</span>previews
+</code></pre>
+</li>
+<li><p><strong>Fehlende Verzeichnisse anlegen</strong>:</p>
+<pre><code class="lang-bash">sudo mkdir -p Web<span class="hljs-regexp">/uploads Web/</span>QRCodes Web<span class="hljs-regexp">/thumbnails Web/</span>previews
+</code></pre>
+</li>
+<li><p><strong>Berechtigungen umfassend korrigieren</strong>:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-keyword">fix</span>-<span class="hljs-keyword">all</span>.<span class="hljs-keyword">sh</span>
+</code></pre>
+<p>Falls das Script nicht funktioniert, führen Sie diese Befehle manuell aus:</p>
+<pre><code class="lang-bash">sudo chmod -R <span class="hljs-number">755</span> Web<span class="hljs-regexp">/uploads Web/</span>QRCodes Web<span class="hljs-regexp">/thumbnails Web/</span>previews
+sudo chown -R $(whoami):$(whoami) Web<span class="hljs-regexp">/uploads Web/</span>QRCodes Web<span class="hljs-regexp">/thumbnails Web/</span>previews
+</code></pre>
+</li>
+<li><p><strong>Logs auf spezifische Fehler überprüfen</strong>:</p>
+<pre><code class="lang-bash"><span class="hljs-comment"># Fehlerhafte Bild-Upload-Sessions identifizieren</span>
+sudo grep -i <span class="hljs-string">"error"</span> logs/<span class="hljs-keyword">error</span>.<span class="hljs-built_in">log</span> | grep -i <span class="hljs-string">"upload"</span> | tail -n <span class="hljs-number">50</span>
+
+<span class="hljs-comment"># Fehler bei der Bildoptimierung finden</span>
+sudo grep -i <span class="hljs-string">"failed"</span> logs/<span class="hljs-keyword">error</span>.<span class="hljs-built_in">log</span> | grep -i <span class="hljs-string">"image"</span> | tail -n <span class="hljs-number">20</span>
+</code></pre>
+</li>
+<li><p><strong>Bei Problemen mit bestimmten Dateitypen</strong>:</p>
+<pre><code class="lang-bash"># Wenn nur bestimmte Dateitypen Probleme verursachen (<span class="hljs-keyword">z</span>.B. PNG)
+sudo <span class="hljs-keyword">grep</span> -i <span class="hljs-string">"png"</span> logs/error.<span class="hljs-built_in">log</span> | tail -n <span class="hljs-number">20</span>
+
+# Vorhandene Dateien überprüfen
+<span class="hljs-keyword">ls</span> -<span class="hljs-keyword">la</span> Web/uploads | <span class="hljs-keyword">grep</span> <span class="hljs-string">".png"</span>
+</code></pre>
+</li>
+<li><p><strong>Wenn nur einige der hochgeladenen Bilder fehlen</strong>:</p>
+<p>Suchen Sie nach Upload-Sessions, bei denen nicht alle Dateien verarbeitet wurden:</p>
+<pre><code class="lang-bash">sudo <span class="hljs-keyword">grep</span> <span class="hljs-string">"Upload session"</span> logs/access.<span class="hljs-built_in">log</span> | <span class="hljs-keyword">grep</span> <span class="hljs-string">"completed"</span> | tail -n <span class="hljs-number">10</span>
+</code></pre>
+<p>Überprüfen Sie die Details einer bestimmten Session (SESSION_ID ersetzen):</p>
+<pre><code class="lang-bash">sudo <span class="hljs-keyword">grep</span> <span class="hljs-string">"Upload SESSION_ID"</span> logs/access.<span class="hljs-built_in">log</span>
+</code></pre>
+<p>Dieser Fehler wird oft durch Berechtigungs- oder Speicherplatzprobleme verursacht.</p>
+</li>
+<li><p><strong>System neustarten und testen</strong>:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-built_in">restart</span>.sh
+</code></pre>
+<p>Testen Sie dann den Bild-Upload mit verschiedenen Dateitypen (JPG, PNG) und beobachten Sie das Verhalten.</p>
+</li>
+<li><p><strong>Überprüfen Sie die Protokolle während des Uploads in Echtzeit</strong>:</p>
+<pre><code class="lang-bash">sudo tail -f logs/<span class="hljs-keyword">error</span>.<span class="hljs-built_in">log</span>
+</code></pre>
+<p>Führen Sie in einem anderen Terminal-Fenster einen Upload durch und beobachten Sie die Logs.</p>
+</li>
+</ol>
+<h2 id="schlussfolgerung">Schlussfolgerung</h2>
+<p>Das Inventarsystem ist eine komplette Lösung für die Verwaltung von Inventar, mit besonderem Fokus auf Bildungseinrichtungen. Es bietet robuste Werkzeuge für das Ausleihen, Zurückgeben und Verfolgen von Gegenständen, sowie umfassende Administratorfunktionen.</p>
+<p>Mit den verbesserten Wartungsskripten ist das System jetzt noch zuverlässiger und einfacher zu warten, selbst bei komplexen Installationen. Die automatischen Berechtigungskorrekturen und Backup-Funktionen sorgen für eine reibungslose Benutzererfahrung und Datensicherheit.</p>
+<p>Für weitere Unterstützung oder Feature-Anfragen öffnen Sie bitte ein Issue im GitHub-Repository.</p>
+<h3 id="empfohlener-workflow-bei-systemproblemen">Empfohlener Workflow bei Systemproblemen</h3>
+<p>Wenn Sie auf Probleme mit dem Inventarsystem stoßen, folgen Sie diesem Workflow für eine systematische Fehlersuche:</p>
+<ol>
+<li><p><strong>Systemstatus überprüfen</strong>:</p>
+<pre><code class="lang-bash">sudo systemctl <span class="hljs-keyword">status</span> inventarsystem-gunicorn
+sudo systemctl <span class="hljs-keyword">status</span> inventarsystem-nginx
+sudo systemctl <span class="hljs-keyword">status</span> mongodb
+</code></pre>
+</li>
+<li><p><strong>Log-Dateien auf Fehler prüfen</strong>:</p>
+<pre><code class="lang-bash">tail -n <span class="hljs-number">50</span> logs/<span class="hljs-keyword">error</span>.<span class="hljs-built_in">log</span>
+tail -n <span class="hljs-number">50</span> logs/access.<span class="hljs-built_in">log</span>
+</code></pre>
+</li>
+<li><p><strong>All-in-One Reparatur durchführen</strong>:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-keyword">fix</span>-<span class="hljs-keyword">all</span>.<span class="hljs-keyword">sh</span>
+</code></pre>
+<p>Dieses Skript behebt die häufigsten Probleme in einer Operation und ist in den meisten Fällen die schnellste Lösung.</p>
+</li>
+<li><p><strong>System neu starten</strong>:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-built_in">restart</span>.sh
+</code></pre>
+</li>
+<li><p><strong>Automatische Überwachung einrichten</strong> (empfohlen für Produktivsysteme):</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-keyword">fix</span>-<span class="hljs-keyword">all</span>.<span class="hljs-keyword">sh</span> --setup-cron
+</code></pre>
+<p>Dies richtet einen täglichen Cron-Job ein, der das System automatisch überwacht und repariert.</p>
+</li>
+<li><p><strong>Falls Probleme bestehen bleiben</strong>:</p>
+<ul>
+<li>Bei Problemen mit der virtuellen Umgebung: <code>sudo ./rebuild-venv.sh</code></li>
+<li>Bei Problemen mit der Datenbank: Versuchen Sie eine Wiederherstellung <code>sudo ./restore.sh --date=latest</code></li>
+<li>Bei spezifischen Berechtigungsproblemen: <code>sudo chmod -R 755 Web</code> oder <code>sudo chown -R $(whoami):$(whoami) .</code></li>
+</ul>
+</li>
+</ol>
+<p>Die meisten Probleme können mit dem <code>fix-all.sh</code>-Skript behoben werden, das speziell entwickelt wurde, um alle bekannten Probleme systematisch zu beheben, und auch automatisch ausgeführt werden kann, um proaktiv Probleme zu verhindern.</p>
+<h4 id="erweiterte-optionen-f-r-fix-all-sh">Erweiterte Optionen für fix-all.sh</h4>
+<p>Das <code>fix-all.sh</code> Skript bietet verschiedene Befehlszeilenoptionen für gezielte Reparaturen:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-keyword">fix</span>-<span class="hljs-keyword">all</span>.<span class="hljs-keyword">sh</span> [OPTIONEN]
+</code></pre>
+<p>Verfügbare Optionen:</p>
+<ul>
+<li><code>--check-only</code>: Nur Prüfung durchführen, ohne Änderungen vorzunehmen</li>
+<li><code>--verbose</code>: Ausführlichere Ausgabe für detaillierte Diagnose</li>
+<li><code>--fix-permissions</code>: Nur Berechtigungsprobleme beheben</li>
+<li><code>--fix-venv</code>: Nur die virtuelle Umgebung reparieren</li>
+<li><code>--fix-pymongo</code>: Nur pymongo/bson-Konflikte beheben</li>
+<li><code>--auto</code>: Automatischer Modus - erkennt und behebt Probleme ohne Benutzerinteraktion</li>
+<li><code>--setup-cron</code>: Richtet einen Cron-Job für tägliche automatische Prüfung und Reparatur ein</li>
+<li><code>--help</code>: Hilfe anzeigen</li>
+</ul>
+<p><strong>Beispiel für eine reine Diagnose ohne Änderungen:</strong></p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-keyword">fix</span>-<span class="hljs-keyword">all</span>.<span class="hljs-keyword">sh</span> --check-<span class="hljs-keyword">only</span>
+</code></pre>
+<p><strong>Automatische Überwachung und Reparatur einrichten:</strong></p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-keyword">fix</span>-<span class="hljs-keyword">all</span>.<span class="hljs-keyword">sh</span> --setup-cron
+</code></pre>
+<p>Berichte und Logs:</p>
+<ul>
+<li>Nach jedem Lauf werden detaillierte Berichte lokal unter <code>logs/auto_fix_report.log</code> gespeichert.</li>
+<li>Laufzeit-Ausgaben erscheinen zusätzlich in der Konsole und in <code>logs/fix_all.log</code>.</li>
+</ul>
+<p>Das Skript führt automatisch eine intelligente Diagnose des Systems durch und behebt gezielt nur die gefundenen Probleme. Es überprüft:</p>
+<ol>
+<li>Berechtigungen für kritische Verzeichnisse</li>
+<li>Zustand der virtuellen Python-Umgebung</li>
+<li>PyMongo/BSON-Konflikte</li>
+<li>Status der Systemdienste</li>
+</ol>
+<p>Nach der Reparatur wird eine zweite Diagnose durchgeführt, um zu bestätigen, dass alle Probleme behoben wurden.</p>
+<h4 id="automatische-berwachung-einrichten">Automatische Überwachung einrichten</h4>
+<p>Das System kann so konfiguriert werden, dass es täglich automatisch nach Problemen sucht und diese behebt:</p>
+<ol>
+<li><p><strong>Automatische Überwachung einrichten</strong>:</p>
+<pre><code class="lang-bash">sudo ./<span class="hljs-keyword">fix</span>-<span class="hljs-keyword">all</span>.<span class="hljs-keyword">sh</span> --setup-cron
+</code></pre>
+<p>Dies richtet einen Cron-Job ein, der jeden Tag um 1:00 Uhr morgens ausgeführt wird und:</p>
+<ul>
+<li>Probleme mit Berechtigungen, der virtuellen Umgebung und Diensten erkennt</li>
+<li>Gefundene Probleme automatisch behebt</li>
+<li>Einen detaillierten Bericht in <code>logs/auto_fix_report.log</code> speichert</li>
+</ul>
+</li>
+<li><p>Status/Protokolle einsehen:</p>
+<ul>
+<li>Laufberichte: <code>logs/auto_fix_report.log</code></li>
+<li>Detail-Logs: <code>logs/fix_all.log</code></li>
+</ul>
+<p>Nach jeder automatischen Reparatur wird ein Bericht an die angegebene E-Mail-Adresse gesendet.</p>
+</li>
+<li><p><strong>Status der automatischen Überwachung prüfen</strong>:</p>
+<pre><code class="lang-bash">sudo crontab -<span class="hljs-keyword">l</span> | <span class="hljs-keyword">grep</span> <span class="hljs-keyword">fix</span>-<span class="hljs-keyword">all</span>
+</code></pre>
+</li>
+</ol>
+   </div>
+</div>
+
+{% endblock %}

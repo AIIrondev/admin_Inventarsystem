@@ -1,0 +1,85 @@
+/* Main container and layout styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 80%;
+    max-width: 1200px;
+    margin: 20px auto;
+}
+
+h1, h2 {
+    text-align: center;
+}
+
+/* Edit and generate buttons with black text for better visibility */
+.edit-button {
+    color: black !important; /* Override any existing color */
+}
+
+.duplicate-button {
+    color: black !important; /* Override any existing color */
+}
+
+.generate-qr-button {
+    color: black !important; /* Override any existing color */
+}
+
+.ausleihen {
+    color: black !important; /* Override any existing color */
+}
+
+/* Modal image display fix */
+.modal-image {
+    display: none;
+    max-width: 100%;
+    max-height: 80vh;
+    margin: 0 auto;
+}
+
+.modal-image.active-image {
+    display: block;
+}
+
+/* Active image display classes */
+.item-image.active-image {
+    display: block !important;
+    opacity: 1 !important;
+    z-index: 5;
+}
+
+.item-image:not(.active-image) {
+    display: none !important;
+}
+
+/* QR Reader styling */
+#qr-reader {
+    width: 500px;
+    display: none;
+}
+
+/* Edit new location container */
+.edit-new-location-container {
+    display: none;
+    margin-top: 10px;
+}
+
+/* Modal dialog styling */
+.modal-dialog-white {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.modal-content-margin {
+    margin-top: 10px;
+}
