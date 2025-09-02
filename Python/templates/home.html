@@ -19,6 +19,215 @@
 
 {% block content %}
 
-<h1>Server Managment</h1>
+<div class="server-mgmt">
+  <div class="header d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h3 mb-0">Server Management</h1>
+    <span id="status-pill" class="status-pill" aria-live="polite">Unbekannt</span>
+  </div>
 
+  <div class="card center-card shadow-sm">
+    <div class="card-body">
+      <div class="control-grid">
+        <button id="powerBtn" type="button" class="action-btn btn-power off" aria-label="Start/Stop">
+          <svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true">
+            <path fill="currentColor" d="M11 3h2v10h-2z"/>
+            <path fill="currentColor" d="M17.656 6.344a8 8 0 1 1-11.313 0l1.414 1.414a6 6 0 1 0 8.485 0z"/>
+          </svg>
+        </button>
+        <button id="reloadBtn" type="button" class="action-btn btn-reload" aria-label="Reload">
+          <svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true">
+            <path fill="currentColor" d="M12 6V3l5 4-5 4V8a4 4 0 1 0 4 4h2a6 6 0 1 1-6-6z"/>
+          </svg>
+        </button>
+        <button id="fixBtn" type="button" class="action-btn btn-fix" aria-label="Repair">
+          <svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true">
+            <path fill="currentColor" d="M21.7 13.35l-5.66-5.66a5 5 0 0 0-6.79 6.79l5.66 5.66a1 1 0 0 0 1.41 0l5.38-5.38a1 1 0 0 0 0-1.41zM7.05 6.64l-3.4-3.4 1.41-1.41 3.4 3.4-1.41 1.41z"/>
+          </svg>
+        </button>
+      </div>
+      <div id="feedback" class="feedback mt-3 text-center small text-muted"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Centered card */
+.center-card { max-width: 720px; margin: 0 auto; }
+
+/* Status pill */
+.server-mgmt .status-pill {
+  display: inline-flex; align-items: center; gap: .5rem;
+  padding: .25rem .6rem; border-radius: 999px; font-weight: 600;
+  border: 1px solid #dee2e6; background: #fff; color: #6c757d;
+}
+.server-mgmt .status-pill.on  { color: #155724; border-color: #c3e6cb; background: #d4edda; }
+.server-mgmt .status-pill.off { color: #721c24; border-color: #f5c6cb; background: #f8d7da; }
+
+/* Control grid */
+.control-grid { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 1.25rem; }
+
+/* Animated circular action buttons */
+.action-btn {
+  width: 92px; height: 92px; border-radius: 50%; border: none; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; color: #fff;
+  box-shadow: 0 8px 20px rgba(0,0,0,.15), inset 0 -6px 12px rgba(0,0,0,.2);
+  transition: transform .15s ease, box-shadow .25s ease, filter .25s ease;
+  position: relative; isolation: isolate;
+}
+.action-btn::after { /* subtle glow */
+  content: ""; position: absolute; inset: 0; border-radius: 50%; z-index: -1; filter: blur(12px); opacity: .35; transition: opacity .25s ease;
+}
+.action-btn:focus { outline: none; }
+.action-btn:focus-visible { box-shadow: 0 0 0 4px rgba(13,110,253,.25), 0 8px 20px rgba(0,0,0,.15), inset 0 -6px 12px rgba(0,0,0,.2); }
+.action-btn:hover { transform: translateY(-2px) scale(1.03); }
+.action-btn:active { transform: translateY(0) scale(.99); }
+.action-btn:disabled { opacity: .6; cursor: not-allowed; filter: grayscale(.2); }
+
+/* Variants */
+.btn-power.off { background: linear-gradient(145deg, #6c757d, #495057); }
+.btn-power.off::after { background: radial-gradient(closest-side, rgba(108,117,125,.45), transparent); }
+.btn-power.on  { background: linear-gradient(145deg, #28a745, #1e7e34); }
+.btn-power.on::after  { background: radial-gradient(closest-side, rgba(40,167,69,.45), transparent); animation: pulseGlow 1.6s ease-in-out infinite; }
+
+.btn-reload { background: linear-gradient(145deg, #0d6efd, #0b5ed7); }
+.btn-reload::after { background: radial-gradient(closest-side, rgba(13,110,253,.45), transparent); }
+
+.btn-fix { background: linear-gradient(145deg, #fd7e14, #e1670d); }
+.btn-fix::after { background: radial-gradient(closest-side, rgba(253,126,20,.45), transparent); }
+
+/* Icon size tweak */
+.action-btn svg { width: 36px; height: 36px; }
+
+/* Feedback */
+.feedback { min-height: 1.25rem; }
+
+/* Animations */
+@keyframes pulseGlow {
+  0% { opacity: .25; transform: scale(1); }
+  50% { opacity: .6; transform: scale(1.06); }
+  100% { opacity: .25; transform: scale(1); }
+}
+@keyframes spin360 { to { transform: rotate(360deg); } }
+.btn-reload.spinning svg { animation: spin360 1s linear infinite; }
+</style>
+
+<script>
+(function () {
+  const $ = (sel) => document.querySelector(sel);
+  const powerBtn   = $('#powerBtn');
+  const reloadBtn  = $('#reloadBtn');
+  const fixBtn     = $('#fixBtn');
+  const statusPill = $('#status-pill');
+  const feedback   = $('#feedback');
+  let isRunning = null;
+  // Auto-refresh every 30s
+  const STATUS_REFRESH_MS = 45000;
+  let statusIntervalId = null;
+
+  function setBusy(isBusy) {
+    [powerBtn, reloadBtn, fixBtn].forEach(el => el && (el.disabled = isBusy));
+    feedback.textContent = isBusy ? 'Bitte warten…' : '';
+  }
+
+  function updateUI(running) {
+    if (typeof running !== 'boolean') return;
+    isRunning = running;
+    powerBtn.classList.toggle('on', running);
+    powerBtn.classList.toggle('off', !running);
+    statusPill.textContent = running ? 'Läuft' : 'Gestoppt';
+    statusPill.classList.toggle('on', running);
+    statusPill.classList.toggle('off', !running);
+  }
+
+  async function api(path, opts = {}) {
+    const res = await fetch(path, Object.assign({
+      method: 'GET', headers: { 'Accept': 'application/json' }
+    }, opts));
+    let payload = null;
+    try { payload = await res.json(); } catch (_) { /* ignore */ }
+    if (!res.ok) {
+      const msg = (payload && (payload.message || payload.error)) || res.statusText;
+      throw new Error(msg || 'Request failed');
+    }
+    return payload;
+  }
+
+  async function fetchStatus() {
+    try {
+      const data = await api('/status');
+      updateUI(!!(data && data.running));
+    } catch (e) {
+      statusPill.textContent = 'Unbekannt';
+      statusPill.classList.remove('on','off');
+    }
+  }
+
+  function startStatusPolling() {
+    stopStatusPolling();
+    statusIntervalId = setInterval(fetchStatus, STATUS_REFRESH_MS);
+  }
+
+  function stopStatusPolling() {
+    if (statusIntervalId) {
+      clearInterval(statusIntervalId);
+      statusIntervalId = null;
+    }
+  }
+
+  powerBtn?.addEventListener('click', async () => {
+    // Decide endpoint based on current state
+    const wantRun = !isRunning;
+    setBusy(true);
+    try {
+      const endpoint = wantRun ? '/start' : '/stop';
+      const data = await api(endpoint, { method: 'POST' });
+      updateUI(!!(data && data.running));
+      feedback.textContent = (data && data.message) || (wantRun ? 'Server gestartet.' : 'Server gestoppt.');
+    } catch (err) {
+      feedback.textContent = err.message || 'Aktion fehlgeschlagen';
+    } finally {
+      setBusy(false);
+    }
+  });
+
+  reloadBtn?.addEventListener('click', async () => {
+    setBusy(true);
+    try {
+      reloadBtn.classList.add('spinning');
+      const data = await api('/reload', { method: 'POST' });
+      feedback.textContent = (data && data.message) || 'Reload ausgelöst.';
+      if (data && 'running' in data) updateUI(!!data.running);
+    } catch (err) {
+      feedback.textContent = err.message || 'Reload fehlgeschlagen';
+    } finally { reloadBtn.classList.remove('spinning'); setBusy(false); }
+  });
+
+  fixBtn?.addEventListener('click', async () => {
+    setBusy(true);
+    try {
+      const data = await api('/fix', { method: 'POST' });
+      feedback.textContent = (data && data.message) || 'Repair gestartet.';
+      if (data && 'running' in data) updateUI(!!data.running);
+    } catch (err) {
+      feedback.textContent = err.message || 'Repair fehlgeschlagen';
+    } finally { setBusy(false); }
+  });
+
+  // Initial status
+  fetchStatus();
+  startStatusPolling();
+
+  // Pause polling when tab is hidden, resume on show
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      stopStatusPolling();
+    } else {
+      fetchStatus();
+      startStatusPolling();
+    }
+  });
+  window.addEventListener('pagehide', stopStatusPolling);
+  window.addEventListener('pageshow', () => { fetchStatus(); startStatusPolling(); });
+})();
+</script>
 {% endblock %}

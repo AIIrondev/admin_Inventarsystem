@@ -9,6 +9,8 @@ app = Flask(__name__, static_folder='static')  # Correctly set static folder
 app.secret_key = "Test123"
 app.debug = True
 
+pw = "nanana" #-> change Imidiatly
+
 status = 0 # This is for the on and off status of the Inventarsystem get this from a systemctl check
 __version__ = "1.0.0" # Commit Version of the File
 
@@ -17,7 +19,7 @@ __version__ = "1.0.0" # Commit Version of the File
 def _find_inventarsystem_base():
     candidates = [
         os.environ.get("INVENTAR_BASE"),
-        "/home/max/Dokumente/repos/Inventarsystem",
+        "/opt/Inventarsystem",
     ]
     for path in candidates:
         if path and os.path.exists(path):
@@ -36,8 +38,34 @@ BASE_DIR = _find_inventarsystem_base()
 def read_backup(): # Reads the content of the Backup files and Returns it
     print("read Backup")
 
-def down_back(backup):
-    print(f"Downloads Backup{backup}")
+def get_list_back():
+    list_directory = os.listdir("/var/backups")
+    list_inv = []
+    for i in list_directory:
+        j = i.find("Inventarsystem")
+        if j == 0:
+            list_inv.append(i)
+    return list_inv
+
+def get_back():
+    items = []
+    for i in get_list_back():
+        item = {"date": None, "size": None, "content": None}
+        date = i.replace("Inventarsystem-", "")
+        date = date.replace(".tar.gz", "")
+        item["date"] = date
+        size_b = os.path.getsize(os.path.join("/var/backups",i))
+        size_gb = size_b / 1000000000
+        size_gb = round(size_gb, 2)
+        if size_gb == 0.0:
+            size_mb = size_b / 1000000
+            item["size"] = f"{round(size_mb, 2)} MB"
+        else:
+            item["size"] = f"{size_gb} GB"
+        # jetzt noch content
+        items.append(item)
+    return items
+
 
 """------------------------------------------------------------------Start Part--------------------------------------------------------------------"""
 def exe_start(pw):
@@ -163,6 +191,35 @@ def exe_update(pw):
     else: 
         return False
 
+def version_list():
+    list_index = []
+    list_commit = get_commit_history().split("\n")
+    list_commit.pop(len(list_commit)-1)
+    for i in list_commit:
+        item = {"hash": None, "date": None, "description": None, "description_prev": None}
+        commit_hash = i[0:7]
+        item["hash"] = commit_hash
+        commit_description = i[7:len(i)]
+        item["description"] = commit_description
+        if len(i) >= 30:
+            commit_description_prev = i[7:30]
+        else:
+            commit_description_prev = i[7:len(i)]
+        item["description_prev"] = commit_description_prev
+        try:
+            result = subprocess.run(
+                ["git", "show", "-s", "--format=%ci", f"{commit_hash}"],
+                cwd=BASE_DIR,
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            item["date"] = result.stdout
+        except subprocess.CalledProcessError as e:
+            item["date"] = "1212-12-12"
+        list_index.append(item)
+    return list_index
+
 '''-------------------------------------------Downgrading-------------------------------------------'''
 
 def get_commit_history():
@@ -196,6 +253,17 @@ def downgrading(pw, commit):
     else: 
         return False
 
+SERVICE_NAME = os.getenv("INVENTAR_SERVICE", "inventarsystem-gunicorn.service")
+
+def is_service_running(service=SERVICE_NAME):
+    try:
+        p = subprocess.run(
+            ["systemctl", "is-active", service],
+            capture_output=True, text=True, check=False
+        )
+        return p.stdout.strip() == "active"
+    except Exception:
+        return False
 
 
 """--------------------Serving--------------------------------"""
@@ -214,11 +282,31 @@ def backup():
         return redirect(url_for('login'))
     return render_template("backup.html")
 
+@app.route("/get_backups", methods=["GET"])
+def get_backups():
+    items = get_back()
+    return {'items': items}
+
+@app.route("/download_backup/<date>", methods=["GET", "POST"])
+def download_backup(date):
+    backups = os.path.join("/var/backups/")
+    return send_from_directory(backups, f"Inventarsystem-{date}.tar.gz", as_attachment=True)
+
 @app.route("/version")
 def version():
     if 'username' not in session:
         flash('Ihnen ist es nicht gestattet auf dieser Internetanwendung, die eben besuchte Adrrese zu nutzen, versuchen sie es erneut nach dem sie sich mit einem berechtigten Nutzer angemeldet haben!', 'error')
         return redirect(url_for('login'))
+    return render_template("version.html")
+
+@app.route("/get_versions", methods=["GET"])
+def get_versions():
+    items = version_list()
+    return {'items': items}
+
+@app.route("/use_version/<version>", methods=["GET", "POST"])
+def use_version(version):
+    downgrading(pw, version)
     return render_template("version.html")
 
 @app.route("/user_managment", methods=["GET", "POST"])
@@ -273,6 +361,50 @@ def du():
             flash('Invalid credentials', 'error')
             get_flashed_messages()
     return render_template('login.html')
+
+@app.route("/start", methods=['GET', 'POST'])
+def start():
+    if 'username' not in session:
+        flash('Ihnen ist es nicht gestattet auf dieser Internetanwendung, die eben besuchte Adrrese zu nutzen, versuchen sie es erneut nach dem sie sich mit einem berechtigten Nutzer angemeldet haben!', 'error')
+        return redirect(url_for('login'))
+    if request.method == 'POST':
+        exe_start(pw)
+    return render_template('home.html')
+
+@app.route("/stop", methods=['GET', 'POST'])
+def stop():
+    if 'username' not in session:
+        flash('Ihnen ist es nicht gestattet auf dieser Internetanwendung, die eben besuchte Adrrese zu nutzen, versuchen sie es erneut nach dem sie sich mit einem berechtigten Nutzer angemeldet haben!', 'error')
+        return redirect(url_for('login'))
+    if request.method == 'POST':
+        exe_stop(pw)
+    return render_template('home.html')
+
+@app.route("/reload", methods=['GET', 'POST'])
+def reload():
+    if 'username' not in session:
+        flash('Ihnen ist es nicht gestattet auf dieser Internetanwendung, die eben besuchte Adrrese zu nutzen, versuchen sie es erneut nach dem sie sich mit einem berechtigten Nutzer angemeldet haben!', 'error')
+        return redirect(url_for('login'))
+    if request.method == 'POST':
+        exe_restart(pw)
+    return render_template('home.html')
+
+@app.route("/fix", methods=['GET', 'POST'])
+def fix():
+    if 'username' not in session:
+        flash('Ihnen ist es nicht gestattet auf dieser Internetanwendung, die eben besuchte Adrrese zu nutzen, versuchen sie es erneut nach dem sie sich mit einem berechtigten Nutzer angemeldet haben!', 'error')
+        return redirect(url_for('login'))
+    if request.method == 'POST':
+        exe_fix_all(pw)
+    return render_template('home.html')
+
+@app.route("/status", methods=['GET'])
+def status():
+    if 'username' not in session:
+        flash('Ihnen ist es nicht gestattet auf dieser Internetanwendung, die eben besuchte Adrrese zu nutzen, versuchen sie es erneut nach dem sie sich mit einem berechtigten Nutzer angemeldet haben!', 'error')
+        return redirect(url_for('login'))
+
+    return jsonify({"running": is_service_running()}), 200
 
 @app.route("/logs")
 def logs():

@@ -15,10 +15,260 @@
 -->
 {% extends "base.html" %}
 
-{% block title %}Version{% endblock %}
+{% block title %}Backup{% endblock %}
 
 {% block content %}
 
-<h1>Version Controll</h1>
+<h1>Version Control</h1>
 
+<div class="container">
+    <div class="content">
+        <div id="items-container" class="items-container">
+            <!-- Items will be dynamically loaded here -->
+        </div>
+    </div>
+    <div id="item-modal" class="item-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div id="modal-content-wrapper">
+                <!-- Content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+      // Add this line to define allItems globally
+    let allItems = [];
+
+    function loadItems() {
+        fetch("{{ url_for('get_versions') }}")
+            .then(response => response.json())
+            .then(data => {
+                const itemsContainer = document.querySelector('#items-container');
+
+                // Store all items data globally for filter rebuilding
+                allItems = data.items || [];
+                
+                // Clear the container first
+                itemsContainer.innerHTML = '';
+                
+                if (!data.items || data.items.length === 0) {
+                    itemsContainer.innerHTML = '<div class="no-items-message">Keine Objekte gefunden</div>';
+                    return;
+                }
+
+                // Sort items by name in ascending order (A-Z)
+                data.items.sort((a, b) => {
+                    const nameA = a.Name ? a.Name.toLowerCase() : '';
+                    const nameB = b.Name ? b.Name.toLowerCase() : '';
+                    return nameA.localeCompare(nameB); // Ascending order
+                });
+                
+                data.items.forEach(item => {
+                    try {
+                        const card = document.createElement('div');
+                        card.classList.add('item-card');
+                        
+                        // Add class to make card clickable 
+                        card.classList.add('clickable-card');
+                        const downloadBase = "{{ url_for('use_version', version='') }}";
+
+                        // When rendering each card in JS:
+                        // Use a link (GET) instead of a POSTing form, and encode the date.
+                        const href = downloadBase + encodeURIComponent(item.date);
+                        card.innerHTML = `
+                          <div class="card-content" data-item-id="${item.date}">
+                            <h3>${item.hash}</h3>
+                            <p><strong>Date:</strong> ${item.date || '-'}</p>
+                            <p><strong>Description:</strong> ${item.description_prev || '-'}</p>
+                          </div>
+                          <div class="actions">
+                            <a class="download" href="${href}">Downgrade</a>
+                            <a class="visit" href="https://github.com/AIIrondev/Inventarsystem/commit/${item.hash}">Visit</a>
+                          </div>
+                        `;
+                        itemsContainer.appendChild(card);
+                        
+                        // Add direct click event listeners to the card content area
+                        const cardContent = card.querySelector('.card-content');
+                        if (cardContent) {
+                            cardContent.addEventListener('click', function(e) {
+                                // Don't trigger if clicking on buttons or form elements
+                                if (e.target.tagName === 'BUTTON' || 
+                                    e.target.tagName === 'A' || 
+                                    e.target.tagName === 'INPUT' ||
+                                    e.target.closest('button') || 
+                                    e.target.closest('a')
+                                )
+                                
+                                // Stop event from bubbling up
+                                e.stopPropagation();
+                                
+                                // Get full item data with correct image paths
+                                const modalItemData = {...item};
+
+                                openItemModal(modalItemData);
+                            });
+                        }
+                    } catch (err) {
+                        console.error('Error processing item:', err, item);
+                    }
+                });
+                
+                // Start display from leftmost position (first card, which is now Z)
+                itemsContainer.scrollLeft = 0;
+
+            })
+            .catch(error => {
+                console.error('Error fetching items:', error);
+                const itemsContainer = document.querySelector('#items-container');
+                itemsContainer.innerHTML = 
+                    '<div class="error-message">Fehler beim Laden der Objekte. Bitte versuchen Sie es später erneut.</div>';
+            });
+    }
+    function openItemModal(item) {
+        // Get modal elements
+        const modal = document.getElementById('item-modal');
+        const modalContent = document.getElementById('modal-content-wrapper');
+        
+        const downloadBase = "{{ url_for('use_version', version='') }}";
+        // Build modal content HTML
+        const href = downloadBase + encodeURIComponent(item.date);
+        modalContent.innerHTML = `
+            <h2>Commit ${item.hash}</h2>
+            
+            <div class="card-content" data-item-id="${item.date}">
+              <h3>${item.hash}</h3>
+              <p><strong>Date:</strong> ${item.date || '-'}</p>
+              <p><strong>Description:</strong> ${item.description || '-'}</p>
+            </div>
+            <div class="actions">
+              <a class="download" href="${href}">Downgrade</a>
+              <a class="visit" href="https://github.com/AIIrondev/Inventarsystem/commit/${item.hash}">Visit</a>
+            </div>
+        `;
+        
+        // Show the modal
+        modal.style.display = 'block';
+        
+        // Set up close button
+        const closeButton = modal.querySelector('.close-modal');
+        closeButton.onclick = function() {
+            modal.style.display = 'none';
+        };
+        
+        
+        // Set up click outside to close
+        window.onclick = function(event) {
+            const itemModal = document.getElementById('item-modal');
+            const scheduleModal = document.getElementById('schedule-modal');
+            
+            if (event.target === itemModal) {
+                itemModal.style.display = 'none';
+            }
+            if (scheduleModal && event.target === scheduleModal) {
+                scheduleModal.style.display = 'none';
+            }
+        };
+        
+    }
+    document.addEventListener('DOMContentLoaded', loadItems);
+</script>
+<style>
+/* Container */
+.container {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  width: 80%;
+  max-width: 1200px;
+  margin: 20px auto;
+}
+
+/* Headings */
+h1, h2 { text-align: center; }
+
+/* Items list */
+.items-container {
+  display: flex;
+  overflow-x: auto;
+  gap: 20px;
+  padding: 20px 0;
+  scroll-snap-type: x mandatory;
+}
+.item-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 20px;
+  max-width: 300px;
+  flex-shrink: 0;
+  scroll-snap-align: center;
+  box-shadow: 0 0 10px rgba(0,0,0,0.08);
+  transition: transform .2s, box-shadow .2s;
+  cursor: pointer;
+}
+.item-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+.item-card h3 { margin-top: 0; }
+
+/* Modal */
+.item-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 1000;
+}
+.modal-content {
+  background: #fff;
+  margin: 15% auto;
+  padding: 20px;
+  border-radius: 5px;
+  width: 80%;
+  max-width: 600px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+.close-modal {
+  float: right;
+  font-size: 28px;
+  cursor: pointer;
+  color: #aaa;
+}
+.close-modal:hover, .close-modal:focus { color: #000; }
+
+/* Messages */
+.error-message, .no-items-message {
+  padding: 20px;
+  text-align: center;
+  width: 100%;
+  color: #842029;
+  background-color: #f8d7da;
+  border: 1px solid #f5c2c7;
+  border-radius: 6px;
+  margin: 20px 0;
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #dee2e6;
+  flex-wrap: wrap;
+}
+.actions form { margin: 0; display: flex; }
+.actions button, .actions a {
+  width: 120px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px;}
+</style>
 {% endblock %}
