@@ -9,10 +9,7 @@ app = Flask(__name__, static_folder='static')  # Correctly set static folder
 app.secret_key = "Test123"
 app.debug = True
 
-pw = "nanana" #-> change Imidiatly
-
-status = 0 # This is for the on and off status of the Inventarsystem get this from a systemctl check
-__version__ = "1.0.0" # Commit Version of the File
+pw = "alsosodoof" #-> change Imidiatly
 
 
 """----------------------------------Config Part----------------------------"""
@@ -32,11 +29,27 @@ BASE_DIR = _find_inventarsystem_base()
 
 """-----------------------------Logs Part-----------------------------------"""
 
-
+def get_log():
+    items = []
+    for i in os.listdir(os.path.join(BASE_DIR, "logs")):
+        item = {"type": None, "length": None, "last_row": None, "last_row_prev": None}
+        file_type = i.replace(".log", "")
+        item["type"] = file_type
+        with open(os.path.join(BASE_DIR, "logs", f"{file_type}.log"), "r") as f:
+            file_content = f.read()
+            file_content_list = file_content.split("\n")
+            length = len(file_content_list)
+            item["length"] = length
+            last_row = file_content_list[length-2]
+            item["last_row"] = last_row
+            if len(last_row) >= 30:
+                item["last_row_prev"] = last_row[0:30]
+            else:
+                item["last_row_prev"] = last_row
+        items.append(item)
+    return items
 
 """------------------------------Backup Part---------------------------------"""
-def read_backup(): # Reads the content of the Backup files and Returns it
-    print("read Backup")
 
 def get_list_back():
     list_directory = os.listdir("/var/backups")
@@ -65,6 +78,21 @@ def get_back():
         # jetzt noch content
         items.append(item)
     return items
+
+def create_backup(pw):
+    backup_path = os.path.join(BASE_DIR, "backup.sh")
+    if not backup_path:
+        return False
+
+    cmd = f'cd "{BASE_DIR}" && bash "{backup_path}"'
+    if pw:
+        result = subprocess.run(
+            ["sudo", "-S", "bash", "-lc", cmd],
+            input=(pw + "\n").encode(),
+        )
+        return result.stdout
+    else: 
+        return False
 
 
 """------------------------------------------------------------------Start Part--------------------------------------------------------------------"""
@@ -292,6 +320,11 @@ def download_backup(date):
     backups = os.path.join("/var/backups/")
     return send_from_directory(backups, f"Inventarsystem-{date}.tar.gz", as_attachment=True)
 
+@app.route("/run_backup")
+def run_backup():
+    create_backup(pw)
+    return redirect(url_for("backup"))
+
 @app.route("/version")
 def version():
     if 'username' not in session:
@@ -413,12 +446,22 @@ def logs():
         return redirect(url_for('login'))
     return render_template("logs.html")
 
+@app.route("/get_logs", methods=["GET"])
+def get_logs():
+    items = get_log()
+    return {'items': items}
+
+@app.route("/download_logs/<type>", methods=["GET", "POST"])
+def download_logs(type):
+    backups = os.path.join(BASE_DIR, "logs")
+    return send_from_directory(backups, f"{type}.log", as_attachment=True)
+
 @app.route("/config")
 def config():
     if 'username' not in session:
         flash('Ihnen ist es nicht gestattet auf dieser Internetanwendung, die eben besuchte Adrrese zu nutzen, versuchen sie es erneut nach dem sie sich mit einem berechtigten Nutzer angemeldet haben!', 'error')
         return redirect(url_for('login'))
-    return render_template("logs.html")
+    return render_template("config.html")
 
 @app.route("/help")
 def help():
