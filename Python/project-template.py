@@ -2,6 +2,7 @@ import user
 import re
 import os
 import subprocess
+import tarfile
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory, get_flashed_messages, jsonify, Response
 
 
@@ -9,7 +10,7 @@ app = Flask(__name__, static_folder='static')  # Correctly set static folder
 app.secret_key = "Test123"
 app.debug = True
 
-pw = "Hahanottoday" #-> change Imidiatly
+pw = "Ahhyouthoughthso" #-> change Imidiatly
 
 
 """----------------------------------Config Part----------------------------"""
@@ -64,12 +65,17 @@ def get_back():
     items = []
     for i in get_list_back():
         item = {"date": None, "size": None, "content": None}
+        file_list = []
         date = i.replace("Inventarsystem-", "")
         date = date.replace(".tar.gz", "")
         item["date"] = date
         size_b = os.path.getsize(os.path.join("/var/backups",i))
         size_gb = size_b / 1000000000
         size_gb = round(size_gb, 2)
+        with tarfile.open(os.path.join("/var/backups",i), 'r:gz') as tar:
+            for member in tar.getmembers():
+                file_list.append(member.name)
+                item["content"] = file_list
         if size_gb == 0.0:
             size_mb = size_b / 1000000
             item["size"] = f"{round(size_mb, 2)} MB"
