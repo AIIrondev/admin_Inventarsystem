@@ -9,7 +9,7 @@ app = Flask(__name__, static_folder='static')  # Correctly set static folder
 app.secret_key = "Test123"
 app.debug = True
 
-pw = "alsosodoof" #-> change Imidiatly
+pw = "Hahanottoday" #-> change Imidiatly
 
 
 """----------------------------------Config Part----------------------------"""
@@ -462,6 +462,120 @@ def config():
         flash('Ihnen ist es nicht gestattet auf dieser Internetanwendung, die eben besuchte Adrrese zu nutzen, versuchen sie es erneut nach dem sie sich mit einem berechtigten Nutzer angemeldet haben!', 'error')
         return redirect(url_for('login'))
     return render_template("config.html")
+
+@app.route("/config_update", methods=["POST"])
+def config_update():
+    # Load config.json, apply any provided changes, and save back
+    import json
+
+    form = request.form
+    # Resolve config path (prefer BASE_DIR)
+    cfg_candidates = []
+    if BASE_DIR:
+        cfg_candidates.append(os.path.join(BASE_DIR, "config.json"))
+    cfg_candidates.append(os.path.join(app.root_path, "config.json"))
+    cfg_path = next((p for p in cfg_candidates if os.path.exists(p)), cfg_candidates[0])
+
+    # Load current config (or start from empty dict)
+    try:
+        with open(cfg_path, "r", encoding="utf-8") as fh:
+            cfg = json.load(fh)
+    except Exception:
+        cfg = {}
+
+    changed = False
+
+    # Update secret key
+    if "key" in form:
+        secret_key = (form.get("key") or "").strip()
+        if secret_key:
+            cfg["key"] = secret_key
+            changed = True
+
+    # Update Mongo DB name
+    if "db_name" in form:
+        db_name = (form.get("db_name") or "").strip()
+        if db_name:
+            cfg.setdefault("mongodb", {})["db"] = db_name
+            changed = True
+
+    # Scheduler intervals
+    if "min_interval" in form:
+        try:
+            val = int(form.get("min_interval"))
+            cfg.setdefault("scheduler", {}).update({"interval_minutes": max(1, val)})
+            changed = True
+        except (TypeError, ValueError):
+            pass
+    if "back_interval" in form:
+        try:
+            val = int(form.get("back_interval"))
+            cfg.setdefault("scheduler", {}).update({"backup_interval_hours": max(1, val)})
+            changed = True
+        except (TypeError, ValueError):
+            pass
+
+    # Upload sizes (MB)
+    if "max_size" in form:
+        try:
+            val = int(form.get("max_size"))
+            cfg.setdefault("upload", {}).update({"max_size_mb": max(1, val)})
+            changed = True
+        except (TypeError, ValueError):
+            pass
+    if "max_image" in form:
+        try:
+            val = int(form.get("max_image"))
+            cfg.setdefault("upload", {}).update({"image_max_size_mb": max(1, val)})
+            changed = True
+        except (TypeError, ValueError):
+            pass
+    if "max_video" in form:
+        try:
+            val = int(form.get("max_video"))
+            cfg.setdefault("upload", {}).update({"video_max_size_mb": max(1, val)})
+            changed = True
+        except (TypeError, ValueError):
+            pass
+
+    # Allowed extensions (comma/space/semicolon separated, strip leading dots)
+    if "al_ext1" in form:
+        raw = (form.get("al_ext1") or "").strip()
+        if raw:
+            parts = re.split(r"[\s,;]+", raw)
+            cleaned, seen = [], set()
+            for p in parts:
+                ext = p.lower().lstrip('.').strip()
+                if ext and ext not in seen:
+                    cleaned.append(ext)
+                    seen.add(ext)
+            if cleaned:
+                cfg["allowed_extensions"] = cleaned
+                changed = True
+
+    # School periods (st_1..st_10, en_1..en_10)
+    if any(k.startswith("st_") or k.startswith("en_") for k in form.keys()):
+        sp = cfg.setdefault("schoolPeriods", {})
+        for i in range(1, 11):
+            st = (form.get(f"st_{i}") or "").strip()
+            en = (form.get(f"en_{i}") or "").strip()
+            if st and en:
+                sp[str(i)] = {
+                    "start": st,
+                    "end": en,
+                    "label": f"{i}. Stunde ({st} - {en})"
+                }
+                changed = True
+
+    # Persist if anything changed
+    if changed:
+        try:
+            with open(cfg_path, "w", encoding="utf-8") as fh:
+                json.dump(cfg, fh, ensure_ascii=False, indent=4)
+        except Exception:
+            pass
+
+    return redirect(url_for("config"))
 
 @app.route("/help")
 def help():

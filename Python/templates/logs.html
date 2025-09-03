@@ -15,7 +15,7 @@
 -->
 {% extends "base.html" %}
 
-{% block title %}Backup{% endblock %}
+{% block title %}Logs{% endblock %}
 
 {% block content %}
 
@@ -23,8 +23,14 @@
 
 <div class="container">
     <div class="content">
-        <div id="items-container" class="items-container">
-            <!-- Items will be dynamically loaded here -->
+        <div class="items-wrap">
+            <div id="items-container" class="items-container">
+                <!-- Items will be dynamically loaded here -->
+            </div>
+            <button class="scroll-btn left" aria-label="Nach links scrollen">&#8249;</button>
+            <button class="scroll-btn right" aria-label="Nach rechts scrollen">&#8250;</button>
+            <div class="fade left" aria-hidden="true"></div>
+            <div class="fade right" aria-hidden="true"></div>
         </div>
     </div>
     <div id="item-modal" class="item-modal">
@@ -40,11 +46,28 @@
       // Add this line to define allItems globally
     let allItems = [];
 
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;');
+    }
+
+    function updateFades(container, wrap) {
+        if (!wrap) return;
+        const atStart = container.scrollLeft <= 0;
+        const atEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 1;
+        wrap.classList.toggle('at-start', atStart);
+        wrap.classList.toggle('at-end', atEnd);
+    }
+
     function loadItems() {
         fetch("{{ url_for('get_logs') }}")
             .then(response => response.json())
             .then(data => {
                 const itemsContainer = document.querySelector('#items-container');
+                const wrap = itemsContainer.closest('.items-wrap');
 
                 // Store all items data globally for filter rebuilding
                 allItems = data.items || [];
@@ -54,6 +77,7 @@
                 
                 if (!data.items || data.items.length === 0) {
                     itemsContainer.innerHTML = '<div class="no-items-message">Keine Objekte gefunden</div>';
+                    updateFades(itemsContainer, wrap);
                     return;
                 }
 
@@ -76,16 +100,21 @@
                         // When rendering each card in JS:
                         // Use a link (GET) instead of a POSTing form, and encode the date.
                         const href = downloadBase + encodeURIComponent(item.type);
-                        card.innerHTML = `
-                          <div class="card-content" data-item-id="${item.type}">
-                            <h3>${item.type}</h3>
-                            <p><strong>Length:</strong> ${item.length || '-'}</p>
-                            <p><strong>Content (preview):</strong> ${item.last_row_prev || '-'}</p>
-                          </div>
-                          <div class="actions">
-                            <a class="download" href="${href}">Download</a>
-                          </div>
-                        `;
+                                                const lengthBadge = (item.length !== undefined && item.length !== null) ? `<span class="badge">${item.length}</span>` : '';
+                                                card.innerHTML = `
+                                                    <div class="card-content" data-item-id="${escapeHtml(item.type)}">
+                                                        <div class="card-header">
+                                                            <h3>${escapeHtml(item.type || '-')}</h3>
+                                                            ${lengthBadge}
+                                                        </div>
+                                                        <div class="preview"><span class="label">Vorschau:</span>
+                                                            <pre class="preview-code">${escapeHtml(item.last_row_prev || '-')}</pre>
+                                                        </div>
+                                                    </div>
+                                                    <div class="actions">
+                                                        <a class="download" href="${href}">Download</a>
+                                                    </div>
+                                                `;
                         itemsContainer.appendChild(card);
                         
                         // Add direct click event listeners to the card content area
@@ -116,6 +145,8 @@
                 
                 // Start display from leftmost position (first card, which is now Z)
                 itemsContainer.scrollLeft = 0;
+                updateFades(itemsContainer, wrap);
+                itemsContainer.addEventListener('scroll', () => updateFades(itemsContainer, wrap), { passive: true });
 
             })
             .catch(error => {
@@ -175,103 +206,193 @@
         };
         
     }
-    document.addEventListener('DOMContentLoaded', loadItems);
+    document.addEventListener('DOMContentLoaded', () => {
+        loadItems();
+        const wrap = document.querySelector('.items-wrap');
+        const container = document.querySelector('#items-container');
+        if (wrap && container) {
+            const leftBtn = wrap.querySelector('.scroll-btn.left');
+            const rightBtn = wrap.querySelector('.scroll-btn.right');
+            const scrollBy = () => Math.max(280, Math.floor(container.clientWidth * 0.8));
+            if (leftBtn) leftBtn.addEventListener('click', () => container.scrollBy({ left: -scrollBy(), behavior: 'smooth' }));
+            if (rightBtn) rightBtn.addEventListener('click', () => container.scrollBy({ left: scrollBy(), behavior: 'smooth' }));
+        }
+    });
 </script>
 <style>
 /* Container */
 .container {
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 5px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
-  width: 80%;
-  max-width: 1200px;
-  margin: 20px auto;
+    background-color: #fff;
+    padding: 24px;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    width: 90%;
+    max-width: 1200px;
+    margin: 20px auto;
 }
 
 /* Headings */
 h1, h2 { text-align: center; }
+h1 { margin-bottom: 8px; }
 
 /* Items list */
 .items-container {
-  display: flex;
-  overflow-x: auto;
-  gap: 20px;
-  padding: 20px 0;
-  scroll-snap-type: x mandatory;
+    display: flex;
+    overflow-x: auto;
+    gap: 16px;
+    padding: 16px 0 8px;
+    scroll-snap-type: x mandatory;
+    scroll-padding: 16px;
+    -webkit-overflow-scrolling: touch;
 }
+.items-wrap { position: relative; }
+.fade {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 40px;
+    pointer-events: none;
+}
+.fade.left { left: 0; background: linear-gradient(90deg, #fff 0%, rgba(255,255,255,0) 100%); opacity: 1; transition: opacity .2s; }
+.fade.right { right: 0; background: linear-gradient(270deg, #fff 0%, rgba(255,255,255,0) 100%); opacity: 1; transition: opacity .2s; }
+.items-wrap.at-start .fade.left { opacity: 0; }
+.items-wrap.at-end .fade.right { opacity: 0; }
+
+.scroll-btn {
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+    width: 36px; height: 36px;
+    border-radius: 999px;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    color: #111827;
+    display: inline-flex; align-items: center; justify-content: center;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+    cursor: pointer;
+}
+.scroll-btn.left { left: -12px; }
+.scroll-btn.right { right: -12px; }
+.scroll-btn:hover { background: #f9fafb; }
+.items-container::-webkit-scrollbar { height: 10px; }
+.items-container::-webkit-scrollbar-track { background: #f3f4f6; border-radius: 999px; }
+.items-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+.items-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
 .item-card {
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  padding: 20px;
-  max-width: 300px;
-  flex-shrink: 0;
-  scroll-snap-align: center;
-  box-shadow: 0 0 10px rgba(0,0,0,0.08);
-  transition: transform .2s, box-shadow .2s;
-  cursor: pointer;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px;
+    width: 320px;
+    flex-shrink: 0;
+    scroll-snap-align: center;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    cursor: pointer;
 }
-.item-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-.item-card h3 { margin-top: 0; }
+.item-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); border-color: #d1d5db; }
+.item-card .card-content { display: grid; gap: 8px; }
+.item-card .card-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.item-card h3 { margin: 0; font-size: 1.05rem; color: #111827; font-weight: 600; }
+.item-card .badge { background: #eef2ff; color: #3730a3; border: 1px solid #c7d2fe; padding: 2px 8px; border-radius: 999px; font-size: .85rem; }
+.item-card .label { font-size: .85rem; color: #6b7280; }
+.preview { display: grid; gap: 4px; }
+.preview-code { margin: 0; padding: 8px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; max-height: 6.5rem; overflow: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: .85rem; line-height: 1.25rem; white-space: pre-wrap; }
 
 /* Modal */
 .item-modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  z-index: 1000;
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(17,24,39,0.45);
+    z-index: 1000;
+    display: none;
 }
 .modal-content {
-  background: #fff;
-  margin: 15% auto;
-  padding: 20px;
-  border-radius: 5px;
-  width: 80%;
-  max-width: 600px;
-  max-height: 70vh;
-  overflow-y: auto;
+    background: #ffffff;
+    margin: 8vh auto 0;
+    padding: 20px 24px;
+    border-radius: 12px;
+    width: 92%;
+    max-width: 720px;
+    max-height: 74vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.18);
 }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
 .close-modal {
-  float: right;
-  font-size: 28px;
-  cursor: pointer;
-  color: #aaa;
+    float: right;
+    font-size: 28px;
+    cursor: pointer;
+    color: #9ca3af;
 }
-.close-modal:hover, .close-modal:focus { color: #000; }
+.close-modal:hover, .close-modal:focus { color: #111827; }
 
 /* Messages */
 .error-message, .no-items-message {
-  padding: 20px;
-  text-align: center;
-  width: 100%;
-  color: #842029;
-  background-color: #f8d7da;
-  border: 1px solid #f5c2c7;
-  border-radius: 6px;
-  margin: 20px 0;
+    padding: 16px;
+    text-align: center;
+    width: 100%;
+    color: #842029;
+    background-color: #f8d7da;
+    border: 1px solid #f5c2c7;
+    border-radius: 8px;
+    margin: 16px 0;
 }
 
 /* Actions */
 .actions {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #dee2e6;
-  flex-wrap: wrap;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #e5e7eb;
+    flex-wrap: wrap;
 }
 .actions form { margin: 0; display: flex; }
 .actions button, .actions a {
-  width: 120px;
-  height: 40px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+    min-width: 120px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
+.actions a.download {
+    background: #2563eb;
+    color: #ffffff;
+    border-radius: 8px;
+    text-decoration: none;
+    padding: 8px 14px;
+    border: 1px solid #1d4ed8;
+}
+.actions a.download:hover { background: #1d4ed8; }
+
 .modal-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px;}
+.detail-pre { margin: 0; padding: 10px 12px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; max-height: 50vh; overflow: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: .9rem; }
+
+/* Dark mode (optional) */
+@media (prefers-color-scheme: dark) {
+    .container { background: #0b1220; box-shadow: 0 2px 12px rgba(0,0,0,0.6); }
+    .items-container::-webkit-scrollbar-track { background: #111827; }
+    .items-container::-webkit-scrollbar-thumb { background: #374151; }
+    .item-card { background: #0f172a; border-color: #1f2937; box-shadow: 0 1px 6px rgba(0,0,0,0.5); }
+    .item-card:hover { border-color: #334155; box-shadow: 0 8px 24px rgba(0,0,0,0.6); }
+    .item-card h3 { color: #e5e7eb; }
+    .label { color: #cbd5e1; }
+    .preview-code, .detail-pre { background: #0b1220; border-color: #1f2937; color: #e5e7eb; }
+    .badge { background: #1e293b; color: #c7d2fe; border-color: #334155; }
+    .fade.left { background: linear-gradient(90deg, #0b1220 0%, rgba(11,18,32,0) 100%); }
+    .fade.right { background: linear-gradient(270deg, #0b1220 0%, rgba(11,18,32,0) 100%); }
+    .scroll-btn { background: #0f172a; color: #e5e7eb; border-color: #1f2937; }
+    .modal-content { background: #0f172a; box-shadow: 0 10px 30px rgba(0,0,0,0.7); }
+    .close-modal { color: #9ca3af; }
+    .close-modal:hover { color: #e5e7eb; }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .item-card { width: 85vw; }
+}
 </style>
 {% endblock %}

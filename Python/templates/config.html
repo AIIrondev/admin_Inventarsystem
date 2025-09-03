@@ -19,6 +19,240 @@
 
 {% block content %}
 
-<h1>Configure</h1>
+<h1>Configuration</h1>
 
+<div class="container">
+  <div class="forms-grid">
+  <form class="config-form" method="POST" action="{{ url_for('config_update') }}">
+    <label for="key" class="form-label">KEY</label>
+    <input type="password" class="form-control" id="key" name="key" required placeholder="e.g. Secret-key">
+    <button type="submit" class="btn btn-primary">Set</button>
+  </form>
+  <form class="config-form" method="POST" action="{{ url_for('config_update') }}">
+    <label for="db_name" class="form-label">DB Name</label>
+    <input type="text" class="form-control" id="db_name" name="db_name" required placeholder="e.g. Inventarsystem">
+    <button type="submit" class="btn btn-primary">Set</button>
+  </form>
+  <form class="config-form" method="POST" action="{{ url_for('config_update') }}">
+    <label for="min_interval" class="form-label">Scheduler Aktivierungs Interval</label>
+    <input type="text" class="form-control" id="min_interval" name="min_interval" required placeholder="e.g. 1">
+    <button type="submit" class="btn btn-primary">Set</button>
+  </form>
+  <form class="config-form" method="POST" action="{{ url_for('config_update') }}">
+    <label for="back_interval" class="form-label">Backup Interval</label>
+    <input type="number" class="form-control" id="back_interval" name="back_interval" required placeholder="e.g. 24">
+    <button type="submit" class="btn btn-primary">Set</button>
+  </form>
+  <form class="config-form" method="POST" action="{{ url_for('config_update') }}">
+    <label for="max_size" class="form-label">Max Size</label>
+    <input type="number" class="form-control" id="max_size" name="max_size" required placeholder="e.g. 10">
+    <button type="submit" class="btn btn-primary">Set</button>
+  </form>
+  <form class="config-form" method="POST" action="{{ url_for('config_update') }}">
+    <label for="max_image" class="form-label">Maximale Image Upload Size</label>
+    <input type="number" class="form-control" id="max_image" name="max_image" required placeholder="e.g. 15">
+    <button type="submit" class="btn btn-primary">Set</button>
+  </form>
+  <form class="config-form" method="POST" action="{{ url_for('config_update') }}">
+    <label for="max_video" class="form-label">Maximale Video Upload Size</label>
+    <input type="number" class="form-control" id="max_video" name="max_video" required placeholder="e.g. 100">
+    <button type="submit" class="btn btn-primary">Set</button>
+  </form>
+  <form class="config-form" method="POST" action="{{ url_for('config_update') }}">
+    <label for="al_ext1" class="form-label">Allowed Extensions</label>
+    <input type="text" class="form-control" id="al_ext1" name="al_ext1" required placeholder="e.g. .jpg, .png, .pdf, .docx, .xlsx, .mp4, .avi">
+    <button type="submit" class="btn btn-primary">Set</button>
+  </form>
+  <form class="menu-item config-form" method="POST" action="{{ url_for('config_update') }}">
+    <label class="form-label">Schul Tags Planung</label>
+    <div class="hint">Zeitformat: HH:MM (24h)</div>
+    <div id="kalender" class="calendar-grid">
+      <div id="1" class="period">
+        <div class="period-header">Stunde 1</div>
+        <div class="field">
+          <label for="st_1">Start</label>
+          <input type="time" class="form-control" id="st_1" name="st_1" required step="300" lang="de-DE">
+        </div>
+        <div class="field">
+          <label for="en_1">Ende</label>
+          <input type="time" class="form-control" id="en_1" name="en_1" required step="300" lang="de-DE">
+        </div>
+      </div>
+      <div id="2" class="period">
+        <div class="period-header">Stunde 2</div>
+        <div class="field">
+          <label for="st_2">Start</label>
+          <input type="time" class="form-control" id="st_2" name="st_2" required step="300" lang="de-DE">
+        </div>
+        <div class="field">
+          <label for="en_2">Ende</label>
+          <input type="time" class="form-control" id="en_2" name="en_2" required step="300" lang="de-DE">
+        </div>
+      </div>
+      <div id="3" class="period">
+        <div class="period-header">Stunde 3</div>
+        <div class="field">
+          <label for="st_3">Start</label>
+          <input type="time" class="form-control" id="st_3" name="st_3" required step="300" lang="de-DE">
+        </div>
+        <div class="field">
+          <label for="en_3">Ende</label>
+          <input type="time" class="form-control" id="en_3" name="en_3" required step="300" lang="de-DE">
+        </div>
+      </div>
+      <div id="4" class="period">
+        <div class="period-header">Stunde 4</div>
+        <div class="field">
+          <label for="st_4">Start</label>
+          <input type="time" class="form-control" id="st_4" name="st_4" required step="300" lang="de-DE">
+        </div>
+        <div class="field">
+          <label for="en_4">Ende</label>
+          <input type="time" class="form-control" id="en_4" name="en_4" required step="300" lang="de-DE">
+        </div>
+      </div>
+      <div id="5" class="period">
+        <div class="period-header">Stunde 5</div>
+        <div class="field">
+          <label for="st_5">Start</label>
+          <input type="time" class="form-control" id="st_5" name="st_5" required step="300" lang="de-DE">
+        </div>
+        <div class="field">
+          <label for="en_5">Ende</label>
+          <input type="time" class="form-control" id="en_5" name="en_5" required step="300" lang="de-DE">
+        </div>
+      </div>
+      <div id="6" class="period">
+        <div class="period-header">Stunde 6</div>
+        <div class="field">
+          <label for="st_6">Start</label>
+          <input type="time" class="form-control" id="st_6" name="st_6" required step="300" lang="de-DE">
+        </div>
+        <div class="field">
+          <label for="en_6">Ende</label>
+          <input type="time" class="form-control" id="en_6" name="en_6" required step="300" lang="de-DE">
+        </div>
+      </div>
+      <div id="7" class="period">
+        <div class="period-header">Stunde 7</div>
+        <div class="field">
+          <label for="st_7">Start</label>
+          <input type="time" class="form-control" id="st_7" name="st_7" required step="300" lang="de-DE">
+        </div>
+        <div class="field">
+          <label for="en_7">Ende</label>
+          <input type="time" class="form-control" id="en_7" name="en_7" required step="300" lang="de-DE">
+        </div>
+      </div>
+      <div id="8" class="period">
+        <div class="period-header">Stunde 8</div>
+        <div class="field">
+          <label for="st_8">Start</label>
+          <input type="time" class="form-control" id="st_8" name="st_8" required step="300" lang="de-DE">
+        </div>
+        <div class="field">
+          <label for="en_8">Ende</label>
+          <input type="time" class="form-control" id="en_8" name="en_8" required step="300" lang="de-DE">
+        </div>
+      </div>
+      <div id="9" class="period">
+        <div class="period-header">Stunde 9</div>
+        <div class="field">
+          <label for="st_9">Start</label>
+          <input type="time" class="form-control" id="st_9" name="st_9" required step="300" lang="de-DE">
+        </div>
+        <div class="field">
+          <label for="en_9">Ende</label>
+          <input type="time" class="form-control" id="en_9" name="en_9" required step="300" lang="de-DE">
+        </div>
+      </div>
+      <div id="10" class="period">
+        <div class="period-header">Stunde 10</div>
+        <div class="field">
+          <label for="st_10">Start</label>
+          <input type="time" class="form-control" id="st_10" name="st_10" required step="300" lang="de-DE">
+        </div>
+        <div class="field">
+          <label for="en_10">Ende</label>
+          <input type="time" class="form-control" id="en_10" name="en_10" required step="300" lang="de-DE">
+        </div>
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Set</button>
+  </form>
+  </div>
+</div>
+<style>
+/* Layout */
+.container {
+  background-color: #fff;
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  width: 90%;
+  max-width: 1200px;
+  margin: 20px auto;
+}
+
+h1 { text-align: center; margin-bottom: 16px; }
+
+.menu-list { display: flex; flex-direction: column; gap: 16px; }
+
+.config-form {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.config-form .form-label { font-weight: 600; }
+.config-form .form-control { margin-bottom: 4px; }
+.config-form .btn { width: auto; align-self: flex-end; }
+
+.menu-item { border-left: 4px solid #3b82f6; }
+
+/* School day planning */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.period {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+}
+
+.period-header {
+  grid-column: 1 / -1;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #111827;
+}
+
+.hint {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.period input[type="time"] {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+.period .field { display: flex; flex-direction: column; }
+
+@media (max-width: 480px) {
+  .period { grid-template-columns: 1fr; }
+}
+</style>
 {% endblock %}
