@@ -1,122 +1,40 @@
-#!/usr/bin/env bash
-#
-# Installiert Laufzeitumgebung und (optional) systemd-Services für das Inventarsystem.
-# - Erstellt ein lokales Python-venv und installiert requirements.
-# - Optional: erzeugt systemd-Units und aktiviert sie.
-#
-# Umgebungsvariablen:
-#   VENV_PATH                  Pfad zum Python venv (Default: ./venv)
-#   PY_BIN                     Python-Binary (Default: python3)
-#   CREATE_SYSTEMD             "1" um systemd Units zu erstellen (Default: 0)
-#   SERVICE_USER               Systemd-User (Default: current user)
-#   SERVICE_GROUP              Systemd-Gruppe (Default: current user's primary group)
-#   INVENTAR_SERVICE           Name der Gunicorn Unit (Default: inventarsystem-gunicorn.service)
-#   INVENTAR_NGINX_SERVICE     Name der Nginx Unit (Default: inventarsystem-nginx.service)
-#   GUNICORN_BIND              Bind-Adresse (Default: 127.0.0.1:8000)
-#   GUNICORN_WORKERS           Anzahl Worker (Default: 3)
-#   GUNICORN_MODULE            WSGI App Modul (Default: Python.user:app)
+#!/bin/bash
 
-set -euo pipefail
+sudo apt-get update
+sudo apt-get install -y curl wget git
 
-SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-# .env einlesen (kann Pfade und Servicenamen überschreiben)
-if [[ -f "$SCRIPT_DIR/.env" ]]; then
-  set +u
-  set -a
-  # shellcheck disable=SC1090
-  . "$SCRIPT_DIR/.env"
-  set +a
-  set -u
+echo "Installing admin_Inventarsystem..."
+# Clone the repository to /var
+git clone https://github.com/AIIrondev/admin_Inventarsystem.git /opt/admin_Inventarsystem || {
+    echo "Failed to clone repository to /opt/admin_Inventarsystem. Exiting."
+    exit 1
+}
+
+cd /opt/admin_Inventarsystem
+# Check if the start.sh script exists
+if [ ! -f "./start.sh" ]; then
+    echo "start.sh script not found in /opt/admin_Inventarsystem"
+    exit 1
 fi
-VENV_PATH=${VENV_PATH:-"$SCRIPT_DIR/venv"}
-PY_BIN=${PY_BIN:-python3}
-CREATE_SYSTEMD=${CREATE_SYSTEMD:-0}
-SERVICE_USER=${SERVICE_USER:-$(id -un)}
-SERVICE_GROUP=${SERVICE_GROUP:-$(id -gn)}
-SERVICE_GUNICORN=${INVENTAR_SERVICE:-inventarsystem-gunicorn.service}
-SERVICE_NGINX=${INVENTAR_NGINX_SERVICE:-inventarsystem-nginx.service}
-GUNICORN_BIND=${GUNICORN_BIND:-127.0.0.1:8000}
-GUNICORN_WORKERS=${GUNICORN_WORKERS:-3}
-GUNICORN_MODULE=${GUNICORN_MODULE:-Python.user:app}
 
-info()  { echo -e "\e[34m[INFO]\e[0m  $*"; }
-warn()  { echo -e "\e[33m[WARN]\e[0m  $*"; }
-err()   { echo -e "\e[31m[ERROR]\e[0m $*"; }
-ok()    { echo -e "\e[32m[DONE]\e[0m  $*"; }
+# Make the script executable
+chmod +x ./start.sh
 
-create_venv() {
-  info "Erstelle venv unter $VENV_PATH"
-  "$PY_BIN" -m venv "$VENV_PATH"
-  # Aktiviere venv subshell
-  source "$VENV_PATH/bin/activate"
-  pip install --upgrade pip
-  if [[ -f "$SCRIPT_DIR/Python/requirements.txt" ]]; then
-    pip install -r "$SCRIPT_DIR/Python/requirements.txt"
-  else
-    warn "requirements.txt nicht gefunden. Überspringe Paketinstallation."
-  fi
-  deactivate
-  ok "venv erstellt und Abhängigkeiten installiert"
-}
+echo "========================================================"
+echo "                  INSTALLATION COMPLETE                 "
+echo "========================================================"
 
-create_systemd_units() {
-  if ! command -v systemctl >/dev/null 2>&1; then
-    warn "systemctl nicht verfügbar. Überspringe Erstellung von systemd Units."
-    return 0
-  fi
-  local unit_dir="/etc/systemd/system"
-  local app_dir="$SCRIPT_DIR"
-  local exec_start="$VENV_PATH/bin/gunicorn --workers $GUNICORN_WORKERS --bind $GUNICORN_BIND $GUNICORN_MODULE"
+cd /opt/admin_Inventarsystem
+# Run the script
+# Ask the user if they want to run the script now
+echo "Running the script now..."
+./start.sh
+if [ $? -ne 0 ]; then
+    echo "Failed to run the script. Please check the logs for more details."
+    exit 1
+fi
+echo "Script executed successfully!"
 
-  info "Erzeuge systemd Unit: $SERVICE_GUNICORN"
-  sudo tee "$unit_dir/$SERVICE_GUNICORN" >/dev/null <<EOF
-[Unit]
-Description=Inventarsystem Gunicorn Service
-After=network.target
-
-[Service]
-User=$SERVICE_USER
-Group=$SERVICE_GROUP
-WorkingDirectory=$app_dir
-Environment="PATH=$VENV_PATH/bin"
-ExecStart=$exec_start
-Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-  info "Erzeuge systemd Unit: $SERVICE_NGINX"
-  sudo tee "$unit_dir/$SERVICE_NGINX" >/dev/null <<EOF
-[Unit]
-Description=Inventarsystem Nginx (Proxy) Service
-After=network.target
-
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-ExecStart=/bin/true
-ExecStop=/bin/true
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-  info "Aktiviere und lade Units"
-  sudo systemctl daemon-reload
-  sudo systemctl enable "$SERVICE_GUNICORN" || true
-  sudo systemctl enable "$SERVICE_NGINX" || true
-  ok "systemd Units erstellt"
-}
-
-main() {
-  create_venv
-  if [[ "$CREATE_SYSTEMD" == "1" ]]; then
-    create_systemd_units
-  else
-    info "Überspringe systemd-Setup (CREATE_SYSTEMD=1 setzen, um zu aktivieren)."
-  fi
-  ok "Installation abgeschlossen. Nutze start.sh zum Starten."
-}
-
-main "$@"
+echo "========================================================"
+echo "              AUTOSTART INSTALLATION COMPLETED          "
+echo "========================================================"

@@ -6,37 +6,11 @@ import tarfile
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory, get_flashed_messages, jsonify, Response
 
 
-def _load_dotenv_file(env_path: str):
-    try:
-        if not env_path or not os.path.exists(env_path):
-            return
-        with open(env_path, 'r', encoding='utf-8') as fh:
-            for line in fh:
-                line = line.strip()
-                if not line or line.startswith('#'):
-                    continue
-                if '=' not in line:
-                    continue
-                key, val = line.split('=', 1)
-                key = key.strip()
-                val = val.strip().strip('"').strip("'")
-                # Bestehende Variablen nicht überschreiben
-                if key and key not in os.environ:
-                    os.environ[key] = val
-    except Exception:
-        # .env Laden ist optional – bei Fehlern einfach fortfahren
-        pass
-
-# Versuche .env aus Projektwurzel zu laden (eine Ebene über diesem Python-Verzeichnis)
-_THIS_DIR = os.path.dirname(__file__)
-_ENV_PATH = os.path.abspath(os.path.join(_THIS_DIR, '..', '.env'))
-_load_dotenv_file(_ENV_PATH)
-
 app = Flask(__name__, static_folder='static')  # Correctly set static folder
 app.secret_key = "Test123"
 app.debug = True
 
-pw = "Ahhyouthoughthso" #-> change Imidiatly
+pw = "OhOhOH" #-> change Imidiatly
 
 
 """----------------------------------Config Part----------------------------"""
@@ -662,6 +636,3 @@ def logout():
     session.pop('admin', None)
     return redirect(url_for('login'))
 
-
-if __name__ == "__main__":
-    app.run("0.0.0.0", 8080, True)
