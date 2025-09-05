@@ -62,7 +62,7 @@ Schritte (Beispiel):
 3) Anwendung starten
 
 ## Anmeldung
-Die Anmeldung erfolgt aktuell via TOTP (Zeit-basierter Einmalcode). Scannen Sie den QR-Code (siehe Route `/assdi`) mit einer Authenticator-App und geben Sie den Code im Login ein.
+Die Anmeldung erfolgt aktuell via TOTP (Zeit-basierter Einmalcode). Scannen Sie den QR-Code mit einer Authenticator-App und geben Sie den Code im Login ein.
 
 ![Login](readme_bilder/Login.png)
 
