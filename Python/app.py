@@ -590,8 +590,8 @@ def help():
         return redirect(url_for('login'))
     return render_template("help.html")
 
-@app.route("/assdi", methods=['GET', 'POST'])
-def assdi():
+@app.route("/zurjsn", methods=['GET', 'POST'])
+def zurjsn():
     user.generate_totp_qrcode()
     uploads = os.path.join(app.root_path)
     return send_from_directory(uploads, "qr.png")
