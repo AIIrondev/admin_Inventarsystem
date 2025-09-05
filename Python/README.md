@@ -1,5 +1,8 @@
 # Inventarsystem – Admin Oberfläche (Python)
 
+[![wakatime](https://wakatime.com/badge/user/30b8509f-5e17-4d16-b6b8-3ca0f3f936d3/project/4ea71c4f-0f6f-4cf9-881b-20a86494b32c.svg)](https://wakatime.com/badge/user/30b8509f-5e17-4d16-b6b8-3ca0f3f936d3/project/4ea71c4f-0f6f-4cf9-881b-20a86494b32c)
+
+
 Willkommen zur Admin-Oberfläche des Inventarsystems. Diese Web-App ermöglicht Administratoren die Verwaltung von Benutzern, Backups, Protokollen, Versionen sowie der Systemkonfiguration.
 
 ## Inhaltsverzeichnis
