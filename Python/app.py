@@ -100,6 +100,21 @@ def create_backup(pw):
     else: 
         return False
 
+def restore_backup(pw, date):
+    restore_path = os.path.join(BASE_DIR, "restore.sh")
+    if not restore_path:
+        return False
+
+    cmd = f'cd "{BASE_DIR}" && bash "{restore_path}" --date={date} --force'
+    if pw:
+        result = subprocess.run(
+            ["sudo", "-S", "bash", "-lc", cmd],
+            input=(pw + "\n").encode(),
+        )
+        return result.stdout
+    else: 
+        return False
+
 
 """------------------------------------------------------------------Start Part--------------------------------------------------------------------"""
 def exe_start(pw):
@@ -462,6 +477,15 @@ def download_logs(type):
     backups = os.path.join(BASE_DIR, "logs")
     return send_from_directory(backups, f"{type}.log", as_attachment=True)
 
+@app.route("/restore/<date>")
+def restore(date):
+    try:
+        restore_backup(pw, date)
+        return redirect(render_template("backup.html"))
+    except:
+        return redirect(render_template("backup.html"))
+
+
 @app.route("/config")
 def config():
     if 'username' not in session:
@@ -635,4 +659,3 @@ def logout():
     session.pop('username', None)
     session.pop('admin', None)
     return redirect(url_for('login'))
-

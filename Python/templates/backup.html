@@ -97,25 +97,27 @@
                         // Add class to make card clickable 
                         card.classList.add('clickable-card');
                         const downloadBase = "{{ url_for('download_backup', date='') }}";
-
+                        const downloadNegative = "{{ url_for('restore', date='') }}";
                         // When rendering each card in JS:
                         // Use a link (GET) instead of a POSTing form, and encode the date.
                         const href = downloadBase + encodeURIComponent(item.date);
-                                                const sizeBadge = (item.size) ? `<span class="badge">${escapeHtml(item.size)}</span>` : '';
-                                                card.innerHTML = `
-                                                    <div class="card-content" data-item-id="${escapeHtml(item.date)}">
-                                                        <div class="card-header">
-                                                            <h3>${escapeHtml(item.date || '-')}</h3>
-                                                            ${sizeBadge}
-                                                        </div>
-                                                        <div class="preview"><span class="label">Vorschau:</span>
-                                                            <pre class="preview-code">${escapeHtml(item.content_prev || item.content || '-')}</pre>
-                                                        </div>
-                                                    </div>
-                                                    <div class="actions">
-                                                        <a class="download" href="${href}">Download</a>
-                                                    </div>
-                                                `;
+                        const date_negative = downloadBase + encodeURIComponent(item.date);
+                        const sizeBadge = (item.size) ? `<span class="badge">${escapeHtml(item.size)}</span>` : '';
+                        card.innerHTML = `
+                            <div class="card-content" data-item-id="${escapeHtml(item.date)}">
+                                <div class="card-header">
+                                    <h3>${escapeHtml(item.date || '-')}</h3>
+                                    ${sizeBadge}
+                                </div>
+                                <div class="preview"><span class="label">Vorschau:</span>
+                                    <pre class="preview-code">${escapeHtml(item.content_prev || item.content || '-')}</pre>
+                                </div>
+                            </div>
+                            <div class="actions">
+                                <a class="download" href="${href}">Download</a>
+                                <a class="restore" href="${date_negative}">Restore</a>
+                            </div>
+                        `;
                         itemsContainer.appendChild(card);
                         
                         // Add direct click event listeners to the card content area
