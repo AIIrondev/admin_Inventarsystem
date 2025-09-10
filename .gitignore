@@ -4,3 +4,4 @@ venv
 .run
 .logs
 __pycache__
+certs

@@ -101,7 +101,7 @@
                         // When rendering each card in JS:
                         // Use a link (GET) instead of a POSTing form, and encode the date.
                         const href = downloadBase + encodeURIComponent(item.date);
-                        const date_negative = downloadBase + encodeURIComponent(item.date);
+                        const date_negative = downloadNegative + encodeURIComponent(item.date);
                         const sizeBadge = (item.size) ? `<span class="badge">${escapeHtml(item.size)}</span>` : '';
                         card.innerHTML = `
                             <div class="card-content" data-item-id="${escapeHtml(item.date)}">
@@ -166,7 +166,9 @@
         
                 // Build modal content HTML
                 const downloadBase = "{{ url_for('download_backup', date='') }}";
+                const downloadNegative = "{{ url_for('restore', date='') }}";
                 const href = downloadBase + encodeURIComponent(item.date);
+                const date_negative = downloadNegative + encodeURIComponent(item.date);
                 modalContent.innerHTML = `
                         <div class="modal-header">
                             <h2>${escapeHtml('Inventarsystem-' + (item.date || '-'))}</h2>
@@ -183,6 +185,7 @@
                         </div>
                         <div class="actions">
                             <a class="download" href="${href}">Download</a>
+                            <a class="restore" href="${date_negative}">Restore</a>
                         </div>
                 `;
         

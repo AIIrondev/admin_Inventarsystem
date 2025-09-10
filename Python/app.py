@@ -10,7 +10,7 @@ app = Flask(__name__, static_folder='static')  # Correctly set static folder
 app.secret_key = "Test123"
 app.debug = True
 
-pw = "OhOhOH" #-> change Imidiatly
+pw = "Placeholder" #-> change Imidiatly
 
 
 """----------------------------------Config Part----------------------------"""
