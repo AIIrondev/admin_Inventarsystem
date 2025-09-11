@@ -15,7 +15,7 @@
 -->
 {% extends "base.html" %}
 
-{% block title %}Backup{% endblock %}
+{% block title %}Version{% endblock %}
 
 {% block content %}
 
@@ -33,14 +33,15 @@
       <div class="fade right" aria-hidden="true"></div>
     </div>
   </div>
-    <div id="item-modal" class="item-modal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <div id="modal-content-wrapper">
-                <!-- Content will be dynamically inserted here -->
-            </div>
-        </div>
-    </div>
+  <div id="item-modal" class="item-modal">
+      <div class="modal-content">
+          <span class="close-modal">&times;</span>
+          <div id="modal-content-wrapper">
+              <!-- Content will be dynamically inserted here -->
+          </div>
+      </div>
+  </div>
+  <a class="update-system" href="{{ url_for('update_system') }}">Update Website</a>
 </div>
 <script>
       // Add this line to define allItems globally
@@ -370,6 +371,38 @@ h1 { margin-bottom: 8px; }
   .item-card { width: 85vw; }
 }
 
+/* Update-System button (standalone primary button) */
+.update-system {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  min-width: 180px;
+  height: 44px;
+  padding: 10px 16px;
+  margin: 16px auto 0;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 600;
+  color: #ffffff;
+  background: #2563eb;
+  border: 1px solid #1d4ed8;
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.25);
+  transition: transform .15s ease, background .2s ease, box-shadow .2s ease;
+}
+.update-system:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.3);
+}
+.update-system:active {
+  transform: translateY(0);
+}
+.update-system:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(37,99,235,.25), 0 2px 10px rgba(37, 99, 235, 0.25);
+}
+
 /* Dark mode (optional) */
 @media (prefers-color-scheme: dark) {
   .container { background: #0b1220; box-shadow: 0 2px 12px rgba(0,0,0,0.6); }
@@ -387,6 +420,13 @@ h1 { margin-bottom: 8px; }
   .modal-content { background: #0f172a; box-shadow: 0 10px 30px rgba(0,0,0,0.7); }
   .close-modal { color: #9ca3af; }
   .close-modal:hover { color: #e5e7eb; }
+  .update-system {
+    background: #1d4ed8;
+    border-color: #1e40af;
+    box-shadow: 0 2px 10px rgba(29, 78, 216, 0.35);
+    color: #e5e7eb;
+  }
+  .update-system:hover { background: #1e40af; }
 }
 </style>
 {% endblock %}

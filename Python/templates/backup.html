@@ -42,6 +42,32 @@
         </div>
     </div>
     <a class="run-backup" href="{{ url_for('run_backup') }}">Generate new Backup</a>
+
+    <div class="upload-card">
+        <h2>Backup hochladen</h2>
+        <p class="sub">Erlaubt: .tar.gz — die Datei wird als Inventarsystem-YYYY-MM-DD.tar.gz gespeichert.</p>
+
+        <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Datei hierhin ziehen oder klicken zum Auswählen">
+            <div class="dz-icon">⬆️</div>
+            <div class="dz-text">
+                Datei hierher ziehen oder klicken, um auszuwählen
+            </div>
+            <input id="fileInput" type="file" name="file" accept=".tar.gz" hidden>
+        </div>
+
+        <div id="selectedFile" class="selected-file" style="display:none;"></div>
+
+        <div id="progressWrap" class="progress-wrap" style="display:none;">
+            <div id="progressBar" class="progress-bar"></div>
+        </div>
+
+        <div id="uploadMsg" class="upload-msg" role="status"></div>
+
+        <div class="upload-actions">
+            <button id="startUpload" class="primary" disabled>Hochladen</button>
+            <button id="cancelUpload" class="ghost" style="display:none;">Abbrechen</button>
+        </div>
+    </div>
 </div>
 <script>
       // Add this line to define allItems globally
@@ -214,16 +240,122 @@
         
     }
         document.addEventListener('DOMContentLoaded', () => {
-                loadItems();
-                const wrap = document.querySelector('.items-wrap');
-                const container = document.querySelector('#items-container');
-                if (wrap && container) {
-                        const leftBtn = wrap.querySelector('.scroll-btn.left');
-                        const rightBtn = wrap.querySelector('.scroll-btn.right');
-                        const scrollBy = () => Math.max(280, Math.floor(container.clientWidth * 0.8));
-                        if (leftBtn) leftBtn.addEventListener('click', () => container.scrollBy({ left: -scrollBy(), behavior: 'smooth' }));
-                        if (rightBtn) rightBtn.addEventListener('click', () => container.scrollBy({ left: scrollBy(), behavior: 'smooth' }));
+            loadItems();
+            const wrap = document.querySelector('.items-wrap');
+            const container = document.querySelector('#items-container');
+            if (wrap && container) {
+                const leftBtn = wrap.querySelector('.scroll-btn.left');
+                const rightBtn = wrap.querySelector('.scroll-btn.right');
+                const scrollBy = () => Math.max(280, Math.floor(container.clientWidth * 0.8));
+                if (leftBtn) leftBtn.addEventListener('click', () => container.scrollBy({ left: -scrollBy(), behavior: 'smooth' }));
+                if (rightBtn) rightBtn.addEventListener('click', () => container.scrollBy({ left: scrollBy(), behavior: 'smooth' }));
+            }
+
+            // Upload UI logic
+            const dropzone = document.getElementById('dropzone');
+            const fileInput = document.getElementById('fileInput');
+            const startBtn = document.getElementById('startUpload');
+            const cancelBtn = document.getElementById('cancelUpload');
+            const selFile = document.getElementById('selectedFile');
+            const msg = document.getElementById('uploadMsg');
+            const progressWrap = document.getElementById('progressWrap');
+            const progressBar = document.getElementById('progressBar');
+            let currentFile = null;
+            let xhr = null;
+
+            function setMessage(text, type = 'info') {
+                msg.textContent = text || '';
+                msg.className = `upload-msg ${type}`;
+            }
+
+            function resetUpload() {
+                currentFile = null;
+                xhr = null;
+                fileInput.value = '';
+                selFile.style.display = 'none';
+                selFile.textContent = '';
+                startBtn.disabled = true;
+                cancelBtn.style.display = 'none';
+                progressWrap.style.display = 'none';
+                progressBar.style.width = '0%';
+                setMessage('');
+            }
+
+            function chooseFile(file) {
+                if (!file) return;
+                if (!file.name.toLowerCase().endsWith('.tar.gz')) {
+                    setMessage('Falsches Dateiformat. Erlaubt ist nur .tar.gz', 'error');
+                    return;
                 }
+                currentFile = file;
+                selFile.style.display = 'block';
+                selFile.textContent = `${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`;
+                startBtn.disabled = false;
+                setMessage('Bereit zum Hochladen');
+            }
+
+            dropzone.addEventListener('click', () => fileInput.click());
+            dropzone.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    fileInput.click();
+                }
+            });
+            fileInput.addEventListener('change', (e) => chooseFile(e.target.files[0]));
+            dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('drag'); });
+            dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('drag');
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    chooseFile(e.dataTransfer.files[0]);
+                }
+            });
+
+            startBtn.addEventListener('click', () => {
+                if (!currentFile) return;
+                const form = new FormData();
+                form.append('file', currentFile);
+                xhr = new XMLHttpRequest();
+                xhr.open('POST', '{{ url_for("upload_file") }}', true);
+                xhr.responseType = 'json';
+
+                xhr.upload.onprogress = function (e) {
+                    if (e.lengthComputable) {
+                        const pct = Math.round((e.loaded / e.total) * 100);
+                        progressWrap.style.display = 'block';
+                        progressBar.style.width = pct + '%';
+                    }
+                };
+                xhr.onload = function () {
+                    cancelBtn.style.display = 'none';
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        setMessage(xhr.response?.message || 'Upload erfolgreich', 'success');
+                        // refresh backups list
+                        loadItems();
+                        resetUpload();
+                    } else {
+                        const err = xhr.response?.error || `Fehler: ${xhr.status}`;
+                        setMessage(err, 'error');
+                    }
+                };
+                xhr.onerror = function () {
+                    cancelBtn.style.display = 'none';
+                    setMessage('Netzwerkfehler beim Hochladen', 'error');
+                };
+
+                cancelBtn.style.display = 'inline-block';
+                setMessage('Lade hoch...');
+                xhr.send(form);
+            });
+
+            cancelBtn.addEventListener('click', () => {
+                if (xhr) {
+                    xhr.abort();
+                }
+                resetUpload();
+                setMessage('Upload abgebrochen', 'info');
+            });
         });
 </script>
 <style>
@@ -395,6 +527,24 @@ h1 { margin-bottom: 8px; }
 @media (max-width: 640px) {
     .item-card { width: 85vw; }
 }
+
+/* Upload card */
+.upload-card { margin-top: 20px; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; }
+.upload-card h2 { margin: 0 0 6px 0; font-size: 1.1rem; }
+.upload-card .sub { margin: 0 0 12px 0; color: #6b7280; font-size: .95rem; }
+.dropzone { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 24px; text-align: center; cursor: pointer; background: #f8fafc; }
+.dropzone.drag { background: #eef2ff; border-color: #a5b4fc; }
+.dz-icon { font-size: 28px; margin-bottom: 6px; }
+.selected-file { margin-top: 10px; color: #111827; }
+.progress-wrap { margin-top: 10px; height: 10px; background: #f3f4f6; border-radius: 999px; overflow: hidden; }
+.progress-bar { height: 100%; width: 0%; background: #3b82f6; transition: width .2s ease; }
+.upload-msg { margin-top: 10px; }
+.upload-msg.error { color: #b91c1c; }
+.upload-msg.success { color: #14532d; }
+.upload-actions { margin-top: 12px; display: flex; gap: 8px; }
+.upload-actions .primary { background: #2563eb; color: #fff; border: 1px solid #1d4ed8; border-radius: 8px; padding: 8px 14px; }
+.upload-actions .primary:disabled { opacity: .6; cursor: not-allowed; }
+.upload-actions .ghost { background: transparent; color: #111827; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 14px; }
 
 /* Dark mode (optional) */
 @media (prefers-color-scheme: dark) {

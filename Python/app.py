@@ -3,6 +3,8 @@ import re
 import os
 import subprocess
 import tarfile
+import datetime
+from werkzeug.utils import secure_filename
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory, get_flashed_messages, jsonify, Response
 
 
@@ -10,7 +12,7 @@ app = Flask(__name__, static_folder='static')  # Correctly set static folder
 app.secret_key = "Test123"
 app.debug = True
 
-pw = "Placeholder" #-> change Imidiatly
+pw = " " #-> change Imidiatly
 
 
 """----------------------------------Config Part----------------------------"""
@@ -26,6 +28,7 @@ def _find_inventarsystem_base():
 
 
 BASE_DIR = _find_inventarsystem_base()
+
 
 
 """-----------------------------Logs Part-----------------------------------"""
@@ -162,6 +165,16 @@ def exe_restart(pw):
     else: 
         return False
 
+def exe_mv(pw, path_from, path_to):
+    cmd = f'mv {path_from} {path_to}'
+    if pw:
+        result = subprocess.run(
+            ["sudo", "-S", "bash", "-lc", cmd],
+            input=(pw + "\n").encode(),
+        )
+        return result.stdout
+    else: 
+        return False
 
 """------------------------------------------------------------User Generation Script---------------------------------------------------------------"""
 def is_valid_username(username):
@@ -346,6 +359,41 @@ def run_backup():
     create_backup(pw)
     return redirect(url_for("backup"))
 
+@app.route('/upload_backup', methods=['POST'])
+def upload_file():
+    if 'file' not in request.files:
+        return jsonify({"error": "Keine Datei-Teilnahme"}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "Keine ausgewählte Datei"}), 400
+    if file:
+        # Work with the sanitized filename and check extension properly
+        filename = secure_filename(file.filename)
+        if filename.lower().endswith('.tar.gz'):
+            # Ensure temp upload directory exists
+            temp_dir = os.path.join(BASE_DIR, "temp_upload") if BASE_DIR else os.path.join(app.root_path, "temp_upload")
+            os.makedirs(temp_dir, exist_ok=True)
+            filepath = os.path.join(temp_dir, filename)
+            file.save(filepath)
+            # If it already looks like a dated backup name, keep it; otherwise rename to today's date
+            if (filename.startswith('Inventarsystem-') and
+                filename.lower().endswith('.tar.gz') and
+                ('2025' in filename or '2026' in filename)):
+                exe_mv(pw, filepath, os.path.join("/var/backups", f"{filename}"))
+                return jsonify({"message": f'Datei "{filename}" erfolgreich hochgeladen!'}), 200
+            else:
+                exe_mv(pw, filepath, os.path.join("/var/backups", f"Inventarsystem-{datetime.date.today()}.tar.gz"))
+                print("Hat alles toll gepklappt du bist so toll Maxi!!")
+                return jsonify({"message": f'Datei "{filename}" erfolgreich hochgeladen!'}), 200
+        else:
+            return jsonify({"error": f'Datei "{filename}" falsches format!'}), 204
+    return jsonify({"error": 'Fehler beim Hochladen der Datei'}), 500
+
+@app.errorhandler(413)
+def too_large(_e):
+    # RequestEntityTooLarge
+    return jsonify({"error": "Datei zu groß. Bitte kleinere Datei wählen."}), 413
+
 @app.route("/version")
 def version():
     if 'username' not in session:
@@ -418,46 +466,73 @@ def du():
 
 @app.route("/start", methods=['GET', 'POST'])
 def start():
+    if request.method == 'POST':
+        if 'username' not in session:
+            return jsonify({"error": "Unauthorized"}), 401
+        exe_start(pw)
+        return jsonify({"running": is_service_running(), "message": "Start ausgelöst."}), 200
+    # GET fallback renders page
     if 'username' not in session:
         flash('Ihnen ist es nicht gestattet auf dieser Internetanwendung, die eben besuchte Adrrese zu nutzen, versuchen sie es erneut nach dem sie sich mit einem berechtigten Nutzer angemeldet haben!', 'error')
         return redirect(url_for('login'))
-    if request.method == 'POST':
-        exe_start(pw)
     return render_template('home.html')
 
 @app.route("/stop", methods=['GET', 'POST'])
 def stop():
+    if request.method == 'POST':
+        if 'username' not in session:
+            return jsonify({"error": "Unauthorized"}), 401
+        exe_stop(pw)
+        return jsonify({"running": is_service_running(), "message": "Stop ausgelöst."}), 200
+    # GET fallback renders page
     if 'username' not in session:
         flash('Ihnen ist es nicht gestattet auf dieser Internetanwendung, die eben besuchte Adrrese zu nutzen, versuchen sie es erneut nach dem sie sich mit einem berechtigten Nutzer angemeldet haben!', 'error')
         return redirect(url_for('login'))
+    return render_template('home.html')
+
+@app.route("/update_system", methods=['GET', 'POST'])
+def update_system():
     if request.method == 'POST':
-        exe_stop(pw)
+        if 'username' not in session:
+            return jsonify({"error": "Unauthorized"}), 401
+        exe_update(pw)
+        return jsonify({"message": "Update ausgelöst."}), 200
+    # GET fallback renders page
+    if 'username' not in session:
+        flash('Ihnen ist es nicht gestattet auf dieser Internetanwendung, die eben besuchte Adrrese zu nutzen, versuchen sie es erneut nach dem sie sich mit einem berechtigten Nutzer angemeldet haben!', 'error')
+        return redirect(url_for('login'))
     return render_template('home.html')
 
 @app.route("/reload", methods=['GET', 'POST'])
 def reload():
+    if request.method == 'POST':
+        if 'username' not in session:
+            return jsonify({"error": "Unauthorized"}), 401
+        exe_restart(pw)
+        return jsonify({"running": is_service_running(), "message": "Reload ausgelöst."}), 200
+    # GET fallback renders page
     if 'username' not in session:
         flash('Ihnen ist es nicht gestattet auf dieser Internetanwendung, die eben besuchte Adrrese zu nutzen, versuchen sie es erneut nach dem sie sich mit einem berechtigten Nutzer angemeldet haben!', 'error')
         return redirect(url_for('login'))
-    if request.method == 'POST':
-        exe_restart(pw)
     return render_template('home.html')
 
 @app.route("/fix", methods=['GET', 'POST'])
 def fix():
+    if request.method == 'POST':
+        if 'username' not in session:
+            return jsonify({"error": "Unauthorized"}), 401
+        exe_fix_all(pw)
+        return jsonify({"running": is_service_running(), "message": "Repair ausgelöst."}), 200
+    # GET fallback renders page
     if 'username' not in session:
         flash('Ihnen ist es nicht gestattet auf dieser Internetanwendung, die eben besuchte Adrrese zu nutzen, versuchen sie es erneut nach dem sie sich mit einem berechtigten Nutzer angemeldet haben!', 'error')
         return redirect(url_for('login'))
-    if request.method == 'POST':
-        exe_fix_all(pw)
     return render_template('home.html')
 
 @app.route("/status", methods=['GET'])
 def status():
     if 'username' not in session:
-        flash('Ihnen ist es nicht gestattet auf dieser Internetanwendung, die eben besuchte Adrrese zu nutzen, versuchen sie es erneut nach dem sie sich mit einem berechtigten Nutzer angemeldet haben!', 'error')
-        return redirect(url_for('login'))
-
+        return jsonify({"running": False, "error": "Unauthorized"}), 401
     return jsonify({"running": is_service_running()}), 200
 
 @app.route("/logs")

@@ -238,10 +238,11 @@ sudo systemctl start mongod
 echo "========================================================"
 echo " Installing Python dependencies"
 echo "========================================================"
-cd "$PROJECT_ROOT"
-if [ -f requirements.txt ]; then
+cd "$PROJECT_ROOT/Python"
+REQ_FILE="$PROJECT_ROOT/Python/requirements.txt"
+if [ -f "$REQ_FILE" ]; then
     tmp_req1="$(mktemp)"; tmp_req2="$(mktemp)"
-    grep -vE '^\s*bson(==|>=|<=|\s|$)' requirements.txt > "$tmp_req1" || true
+    grep -vE '^\s*bson(==|>=|<=|\s|$)' "$REQ_FILE" > "$tmp_req1" || true
     grep -vE '^\s*pymongo(==|>=|<=|\s|$)' "$tmp_req1" > "$tmp_req2" || true
     python -m pip install -r "$tmp_req2" || { echo "Failed to install base requirements"; exit 1; }
     rm -f "$tmp_req1" "$tmp_req2"
@@ -288,6 +289,20 @@ if [ ! -f "$PROJECT_ROOT/Python/app.py" ]; then
 fi
 echo "✓ Flask app found"
 
+# Quick import check to fail fast if dependencies are missing
+echo "Performing quick Flask app import check..."
+python - <<'PY'
+import sys
+from importlib import import_module
+try:
+    m = import_module('app')
+    assert hasattr(m, 'app'), 'module app has no attribute app'
+    print('App import OK')
+except Exception as e:
+    print('App import failed:', e)
+    sys.exit(1)
+PY
+
 echo "========================================================"
 echo " SSL certificate setup"
 echo "========================================================"
@@ -327,6 +342,9 @@ User=${SUDO_USER:-$USER}
 Group=$(id -gn ${SUDO_USER:-$USER})
 WorkingDirectory=$PROJECT_ROOT/Python
 Environment="PATH=$VENV_DIR/bin:/usr/local/bin:/usr/bin:/bin"
+# The admin UI should report the status of the main Inventarsystem service
+# (not itself). Override with ENV INVENTAR_SERVICE if different.
+Environment="INVENTAR_SERVICE=inventarsystem-gunicorn.service"
 ExecStart=$VENV_DIR/bin/gunicorn app:app \
     --bind unix:/tmp/admin-inventarsystem.sock \
     --workers 1 \
@@ -349,7 +367,8 @@ server {
     listen 8080;
     server_name ${SERVER_NAME};
 
-    client_max_body_size 50M;
+    # Allow larger uploads to match Flask MAX_CONTENT_LENGTH (default 512M)
+    client_max_body_size 3000M;
 
     # Serve static files directly
     location /static/ {
@@ -359,15 +378,15 @@ server {
     }
 
     location / {
-        include proxy_params;
+        include /etc/nginx/proxy_params;
         proxy_pass http://unix:/tmp/admin-inventarsystem.sock;
         proxy_read_timeout 300;
-    proxy_set_header Host \$host;
-    proxy_set_header X-Real-IP \$remote_addr;
-    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_http_version 1.1;
-    proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
     }
 }
@@ -390,13 +409,7 @@ USE_WRAPPER=false
 if [ -f "/etc/systemd/system/admin-inventarsystem-nginx.service" ]; then
     USE_WRAPPER=true
 fi
-
-echo "Starting Gunicorn..."
-sudo systemctl restart admin-inventarsystem-gunicorn.service
-
 if [ "$USE_WRAPPER" = true ]; then
-    echo "Detected admin-inventarsystem-nginx.service; using wrapper service for nginx"
-    sudo systemctl enable admin-inventarsystem-nginx.service || true
     # Avoid conflicts with native nginx service
     sudo systemctl disable --now nginx || true
     echo "Reloading Nginx (wrapper)..."
@@ -425,14 +438,13 @@ echo "========================================================"
 if have_cmd ufw; then
     sudo ufw --force enable || true
     sudo ufw allow 22/tcp || true
-    sudo ufw allow 443/tcp || true
     sudo ufw allow 8080/tcp || true
 fi
 
 echo "========================================================"
 echo " Access Information"
 echo "========================================================"
-echo "Web Interface: https://${NETWORK_IP}:8080"
+echo "Web Interface: http://${NETWORK_IP}:8080"
 echo "Gunicorn socket: /tmp/admin-inventarsystem.sock"
 echo "Logs: $LOG_DIR (access.log, error.log)"
 echo "MongoDB (optional): mongodb://localhost:27017"
@@ -534,8 +546,8 @@ sudo ufw default allow outgoing
 # Allow SSH (port 22)
 sudo ufw allow 22
 
-# Allow HTTPS (port 443)
-sudo ufw allow 443
+# Allow HTTP (port 8080)
+sudo ufw allow 8080
 
 # Enable UFW
 sudo ufw --force enable
