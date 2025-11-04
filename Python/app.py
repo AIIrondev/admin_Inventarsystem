@@ -315,9 +315,7 @@ def downgrading(pw, commit):
     else: 
         return False
 
-SERVICE_NAME = os.getenv("INVENTAR_SERVICE", "inventarsystem-gunicorn.service")
-
-def is_service_running(service=SERVICE_NAME):
+def is_service_running(service="inventarsystem-gunicorn.service"):
     try:
         p = subprocess.run(
             ["systemctl", "is-active", service],
