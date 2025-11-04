@@ -344,7 +344,7 @@ WorkingDirectory=$PROJECT_ROOT/Python
 Environment="PATH=$VENV_DIR/bin:/usr/local/bin:/usr/bin:/bin"
 # The admin UI should report the status of the main Inventarsystem service
 # (not itself). Override with ENV INVENTAR_SERVICE if different.
-Environment="INVENTAR_SERVICE=inventarsystem-gunicorn.service"
+Environment="INVENTAR_SERVICE=admin-inventarsystem-gunicorn.service"
 ExecStart=$VENV_DIR/bin/gunicorn app:app \
     --bind unix:/tmp/admin-inventarsystem.sock \
     --workers 1 \
