@@ -543,7 +543,7 @@ def logs():
 @app.route("/get_logs", methods=["GET"])
 def get_logs():
     items = get_log()
-    return {'items': items}
+    return jsonify({'items': items}), 200
 
 @app.route("/download_logs/<type>", methods=["GET", "POST"])
 def download_logs(type):

@@ -21,37 +21,28 @@
 <div class="help-page">
    <style>
       html { scroll-behavior: smooth; }
-      .help-page { color: #111; }
-      .help-page h1, .help-page h2, .help-page h3, .help-page h4 { scroll-margin-top: 80px; }
-      .help-toc {
-         background: #fff;
-         border: 1px solid #e5e7eb;
-         border-radius: 8px;
-         padding: 1rem 1.25rem;
-         margin: 1rem 0 1.5rem;
-         box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-      }
-      .help-toc .toc-title { font-weight: 700; margin-bottom: .5rem; }
+      .help-page { color: var(--c-text); background: var(--c-bg); }
+      .help-page h1, .help-page h2, .help-page h3, .help-page h4 { scroll-margin-top: 80px; color: var(--c-accent); }
+      .help-toc { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 8px; padding: 1rem 1.25rem; margin: 1rem 0 1.5rem; box-shadow: var(--c-shadow-sm); }
+      .help-toc .toc-title { font-weight: 700; margin-bottom: .5rem; color: var(--c-text); }
       .help-toc ol { margin: 0; padding-left: 1.2rem; }
-      .help-toc li { margin: .2rem 0; }
-      .help-toc a { text-decoration: none; color: #0d6efd; }
-      .help-toc a:hover { text-decoration: underline; }
-      .help-content pre {
-         background: #0f172a;
-         color: #e2e8f0;
-         border-radius: 8px;
-         padding: .75rem 1rem;
-         overflow: auto;
-         border: 1px solid #0b1220;
-      }
-      .help-content code:not([class]) {
-         background: #f1f5f9;
-         padding: .1rem .3rem;
-         border-radius: 4px;
-      }
-      .help-content ul, .help-content ol { margin-bottom: .75rem; }
-      .help-content p { margin: .5rem 0 .75rem; }
-      .badge-inline { vertical-align: middle; }
+      .help-toc li { margin: .2rem 0; color: var(--c-text-soft); }
+      .help-toc a { text-decoration: none; color: var(--c-link); font-weight: 500; }
+      .help-toc a:hover { text-decoration: underline; color: var(--c-link-hover); }
+      .help-content { color: var(--c-text); }
+      .help-content p { margin: .5rem 0 .75rem; line-height: 1.6; }
+      .help-content pre { background: var(--c-code-bg); color: var(--c-text-soft); border: 1px solid var(--c-border); border-radius: 8px; padding: .75rem 1rem; overflow: auto; line-height: 1.4; font-size: .85rem; }
+      .help-content code:not([class]) { background: var(--c-surface-alt); color: var(--c-accent); padding: .1rem .3rem; border-radius: 4px; font-weight: 500; }
+      .help-content ul, .help-content ol { margin-bottom: .75rem; padding-left: 1.5rem; }
+      .help-content li { margin: .4rem 0; color: var(--c-text-soft); line-height: 1.6; }
+      .help-content strong { color: var(--c-text); font-weight: 600; }
+      .help-content a { color: var(--c-link); text-decoration: none; }
+      .help-content a:hover { color: var(--c-link-hover); text-decoration: underline; }
+      .badge-inline { vertical-align: middle; max-height: 20px; }
+      .help-content pre::-webkit-scrollbar { height: 8px; }
+      .help-content pre::-webkit-scrollbar-track { background: var(--c-scroll-track); }
+      .help-content pre::-webkit-scrollbar-thumb { background: var(--c-scroll-thumb); border-radius: 4px; }
+      .help-content pre::-webkit-scrollbar-thumb:hover { background: var(--c-scroll-thumb-hover); }
    </style>
 
    <nav class="help-toc" role="navigation" aria-label="Inhalt">
